@@ -4,13 +4,12 @@ local experiment_code_path = std.extVar("APPWORLD_EXPERIMENT_CODE_PATH");
 local model_config = {
     "client_name": "openai",
     "api_type": "chat_completions",
-    "base_url": "https://api.deepseek.com/v1",
-    "api_key_env_name": "DEEPSEEK_API_KEY",
-    "name": "deepseek-chat",
+    "name": "gpt-5",
+    "api_key_env_name": "OPENAI_API_KEY",
     "temperature": 1.0,
     "seed": 100,
     "drop_reasoning_content": false,
-    "cost_per_token": {"input_cache_hit": 2.8e-08, "input_cache_miss": 2.8e-07, "input_cache_write": 0.0, "output": 4.2e-07},
+    "cost_per_token": {"input_cache_hit": 1.25e-07, "input_cache_miss": 1.25e-06, "input_cache_write": 0.0, "output": 1e-05},
     "retry_after_n_seconds": 15,
     "use_cache": false,
     "max_retries": 100,
@@ -56,11 +55,11 @@ local model_config = {
     },
     "metadata": {
         "model": {
-            "file_name": "deepseek-v3.2-terminus-exp-without-reasoning",
-            "humanized_name": "Deepseek V3.2 Terminus Exp Without Reasoning",
-            "precise_name": "deepseek-chat",
-            "creator": "deepseek",
-            "provider": "deepseek",
+            "file_name": "gpt-5-no-reasoning",
+            "humanized_name": "GPT-5 No Reasoning",
+            "precise_name": "gpt-5",
+            "creator": "openai",
+            "provider": "openai",
         },
         "agent": {
             "file_name": "simplified_function_calling_agent",

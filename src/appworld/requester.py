@@ -67,10 +67,11 @@ def is_url(url: str) -> bool:
         return False
 
 
-class RequestCallInfoType(TypedDict):
+class RequestCallInfoType(TypedDict, total=False):
     method: str
     url: str
     data: dict[str, Any]
+    response: dict[str, Any] | list[Any] | None
 
 
 class RequestTracker:
@@ -89,6 +90,10 @@ class RequestTracker:
         assert method in ("get", "post", "put", "patch", "delete")
         data = copy.deepcopy(data or {})
         self.requests.append({"method": method, "url": url, "data": data})
+
+    def attach_response(self, response: dict[str, Any] | list[Any] | None) -> None:
+        if self.requests:
+            self.requests[-1]["response"] = copy.deepcopy(response) if response is not None else None
 
     def reset(self) -> None:
         self.requests = []
@@ -870,6 +875,8 @@ class Requester:
             **data,
         )
         response_dict = self.response_to_json(response, show=show)
+        if track:
+            self.request_tracker.attach_response(response_dict)
         return cast(dict[str, Any] | list[Any], response_dict)
 
 

@@ -2,15 +2,12 @@ local experiment_prompts_path = std.extVar("APPWORLD_EXPERIMENT_PROMPTS_PATH");
 local experiment_configs_path = std.extVar("APPWORLD_EXPERIMENT_CONFIGS_PATH");
 local experiment_code_path = std.extVar("APPWORLD_EXPERIMENT_CODE_PATH");
 local model_config = {
-    "client_name": "openai",
+    "client_name": "litellm",
     "api_type": "chat_completions",
-    "base_url": "https://api.deepseek.com/v1",
-    "api_key_env_name": "DEEPSEEK_API_KEY",
-    "name": "deepseek-chat",
+    "name": "anthropic/claude-sonnet-4-6",
     "temperature": 1.0,
-    "seed": 100,
     "drop_reasoning_content": false,
-    "cost_per_token": {"input_cache_hit": 2.8e-08, "input_cache_miss": 2.8e-07, "input_cache_write": 0.0, "output": 4.2e-07},
+    "cost_per_token": {"input_cache_hit": 3e-07, "input_cache_miss": 3e-06, "input_cache_write": 3.75e-06, "output": 1.5e-05},
     "retry_after_n_seconds": 15,
     "use_cache": false,
     "max_retries": 100,
@@ -56,11 +53,11 @@ local model_config = {
     },
     "metadata": {
         "model": {
-            "file_name": "deepseek-v3.2-terminus-exp-without-reasoning",
-            "humanized_name": "Deepseek V3.2 Terminus Exp Without Reasoning",
-            "precise_name": "deepseek-chat",
-            "creator": "deepseek",
-            "provider": "deepseek",
+            "file_name": "claude-sonnet-4-6",
+            "humanized_name": "Claude Sonnet 4.6",
+            "precise_name": "anthropic/claude-sonnet-4-6",
+            "creator": "anthropic",
+            "provider": "anthropic",
         },
         "agent": {
             "file_name": "simplified_function_calling_agent",

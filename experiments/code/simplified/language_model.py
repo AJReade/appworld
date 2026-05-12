@@ -733,6 +733,9 @@ class LanguageModel:
                 print(f"Encountered RAISE_ERROR ({type(exception).__name__}): {exception}")
                 raise exception
             except RETRY_ERROR as exception:
+                if "insufficient_quota" in str(exception):
+                    print(f"No API credits — aborting immediately: {exception}")
+                    raise exception
                 print(f"Encountered RETRY_ERROR ({type(exception).__name__}): {exception}")
                 retrial_exception = exception
                 if self.retry_after_n_seconds is None:
