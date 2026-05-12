@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import glob
 import importlib
 import json
 import os
@@ -1688,6 +1689,13 @@ def run(
             "root directory is not the current directory."
         ),
     ),
+    run: int | None = typer.Option(
+        None,
+        help=(
+            "Run number for repeated experiments. Appends '/run_N' to the output "
+            "directory. If set to 0, auto-detects the next run number."
+        ),
+    ),
 ) -> None:
     """
     [Development] Run an AppWorld agent from the appworld-agents library.
@@ -1816,6 +1824,12 @@ def run(
         APPWORLD_EXPERIMENT_CONFIGS_PATH=path_store.experiment_configs,
         APPWORLD_EXPERIMENT_CODE_PATH=path_store.experiment_code,
     )
+    if run is not None:
+        if run == 0:
+            existing = sorted(glob.glob(os.path.join(path_store.experiment_outputs, experiment_name, "run_*")))
+            run = len(existing) + 1
+        experiment_name = os.path.join(experiment_name, f"run_{run}")
+        print(f"Run {run}: output directory → {os.path.join(path_store.experiment_outputs, experiment_name)}")
     backup_experiment_config = deepcopy(experiment_config)
     override = override or "{}"
     try:
