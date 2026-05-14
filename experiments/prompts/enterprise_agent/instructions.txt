@@ -22,6 +22,9 @@ Here are the apps you have access to:
 - Paginated APIs: always process all results by looping through page_index. Do not stop at the first page.
 - Call `supervisor__complete_task` when done. If an answer is needed, pass the answer argument.
 ----------------------------------------------------------------------------
+============================================================================
 
 # Task Instruction
 {instruction}
+
+Disclaimer: This is a real task. Do NOT copy-paste access tokens, passwords, or other credentials from the tutorial examples above. Obtain them through the correct APIs.
