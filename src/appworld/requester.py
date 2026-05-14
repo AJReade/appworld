@@ -866,18 +866,23 @@ class Requester:
                 )
             response_dict = response_dict["response"]
             return cast(dict[str, Any] | list[Any], response_dict)
-        response = self._request(
-            _app_name=_app_name,
-            _api_name=_api_name,
-            client=client,
-            raise_on_failure=raise_on_failure,
-            track=track,
-            **data,
-        )
-        response_dict = self.response_to_json(response, show=show)
-        if track:
-            self.request_tracker.attach_response(response_dict)
-        return cast(dict[str, Any] | list[Any], response_dict)
+        try:
+            response = self._request(
+                _app_name=_app_name,
+                _api_name=_api_name,
+                client=client,
+                raise_on_failure=raise_on_failure,
+                track=track,
+                **data,
+            )
+            response_dict = self.response_to_json(response, show=show)
+            if track:
+                self.request_tracker.attach_response(response_dict)
+            return cast(dict[str, Any] | list[Any], response_dict)
+        except Exception:
+            if track:
+                self.request_tracker.attach_response({"error": True, "exception": True})
+            raise
 
 
 def add_pre_excepthook() -> None:
