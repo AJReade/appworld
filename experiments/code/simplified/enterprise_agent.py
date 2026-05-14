@@ -77,6 +77,27 @@ class EnterpriseFunctionCallingAgent(Agent):  # type: ignore[misc]
         )
         self.messages = header_messages + body_messages
 
+    def continue_task(self, world: AppWorld) -> None:
+        """
+        Continue the session with a new task.
+
+        Messages persist from previous tasks. Only appends the new task
+        instruction as a user message. Does not rebuild system prompt or tool list.
+        """
+        self.world = world
+        self.step_number = 0
+
+        if self.log_lm_calls:
+            self.language_model.log_calls_to(world=world)
+        self.usage_tracker.reset(world.task_id)
+        self.logger.start_task(world)
+
+        # Append new task instruction to existing conversation
+        self.messages.append({
+            "role": "user",
+            "content": f"New task: {world.task.instruction}",
+        })
+
     def next_execution_inputs_usage_and_status(
         self, last_execution_outputs: Sequence[ExecutionIO]
     ) -> tuple[Sequence[ExecutionIO], Usage, Status]:
