@@ -83,9 +83,10 @@ class EnterpriseFunctionCallingAgent(Agent):  # type: ignore[misc]
 
         Messages persist from previous tasks. Only appends the new task
         instruction as a user message. Does not rebuild system prompt or tool list.
+        Skips the readiness step — goes straight to function calling.
         """
         self.world = world
-        self.step_number = 0
+        self.step_number = 1  # Skip readiness step (step 1) — go straight to function calling
 
         if self.log_lm_calls:
             self.language_model.log_calls_to(world=world)
