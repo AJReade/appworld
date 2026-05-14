@@ -1371,6 +1371,65 @@ class AppWorld:
             raise RuntimeError("Interactive shell is not initialized.")
         globals().update(self.shell.user_ns)
 
+    def switch_task(self, task_id: str, experiment_name: str | None = None) -> None:
+        """
+        Switch to a new task without resetting the DB state.
+
+        Updates the supervisor's active task record, saves and resets per-task logging,
+        and updates output directories. The DB state from previous tasks persists.
+        """
+        if self.remote_environment_url:
+            raise NotImplementedError("switch_task not supported for remote environments")
+
+        # Save logs from the current task before switching
+        self.save_logs()
+
+        # Load new task metadata (but don't reload DB)
+        new_task = Task.load(
+            task_id=task_id,
+            load_ground_truth=True,
+            ground_truth_mode="minimal",
+        )
+
+        # Update supervisor's active task in the DB
+        from appworld.apps.supervisor.constants import NOT_GIVEN_ANSWER
+        from appworld.apps.supervisor.models import Task as SupervisorTask
+
+        supervisor_task = SupervisorTask.all()[0]
+        supervisor_task.instruction = new_task.instruction
+        supervisor_task.status = None
+        supervisor_task.answer = NOT_GIVEN_ANSWER
+        supervisor_task.save()
+
+        # Update task reference
+        self.task = new_task
+        self.task_id = task_id
+
+        # Update output directories for new task
+        exp_name = experiment_name or self.experiment_name
+        output_base = os.path.join(self.base_output_directory, "tasks", task_id)
+        self.output_directory = output_base
+        self.output_db_home_path_on_disk = os.path.join(output_base, "dbs")
+        self.output_logs_directory = os.path.join(output_base, "logs")
+        self.output_misc_directory = os.path.join(output_base, "misc")
+        self.output_version_directory = os.path.join(output_base, "version")
+        self.output_checkpoints_directory = os.path.join(output_base, "checkpoints")
+
+        # Create output directories
+        for d in [
+            self.output_directory,
+            self.output_db_home_path_on_disk,
+            self.output_logs_directory,
+            self.output_misc_directory,
+            self.output_version_directory,
+            self.output_checkpoints_directory,
+        ]:
+            os.makedirs(d, exist_ok=True)
+
+        # Reset per-task logging
+        self.requester.reset_requests()
+        self.environment_io = []
+
     def close(self) -> None:
         if self.remote_environment_url:
             self._remote_environment_call("close")
