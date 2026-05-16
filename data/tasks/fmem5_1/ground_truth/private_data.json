@@ -1,0 +1,1 @@
+{"expected_backup_paths": ["/home/jordan/backups/passport.pdf", "/home/jordan/backups/birth_certificate.pdf", "/home/jordan/backups/ssn.pdf"], "source_paths": ["~/documents/personal/identity/passport.pdf", "~/documents/personal/identity/birth_certificate.pdf", "~/documents/personal/identity/ssn.pdf"], "num_files": 3}

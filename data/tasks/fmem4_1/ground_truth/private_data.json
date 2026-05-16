@@ -1,0 +1,8 @@
+{
+    "due_bills": [
+        {"name": "Electricity", "amount": 45.0, "recipient_name": "Troy Solomon"},
+        {"name": "Internet", "amount": 60.0, "recipient_name": "Kathryn Maldonado"}
+    ],
+    "due_recipient_venmo_ids": [11, 86],
+    "not_due_recipient_venmo_ids": [61, 31]
+}

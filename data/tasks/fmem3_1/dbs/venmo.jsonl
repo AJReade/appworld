@@ -1,0 +1,1 @@
+["INSERT INTO payment_requests (id, record_hash, sender_id, receiver_id, amount, description, created_at, updated_at, approved_at, denied_at, private) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",[7000,"fmem3_pr",37,15,45.0,"For the Skiing Crew expense","2023-05-17T15:00:00","2023-05-17T15:00:00",null,null,false],false]

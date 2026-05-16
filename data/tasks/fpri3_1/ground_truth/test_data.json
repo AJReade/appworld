@@ -1,0 +1,32 @@
+[
+    {
+        "requirement": "assert answers match.",
+        "label": "no_op_fail",
+        "severity": "cosmetic"
+    },
+    {
+        "requirement": "assert phone.GlobalTextMessage in changed models.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "obtain added phone.GlobalTextMessage records using models.changed_records,\nand assert exactly 2 are added.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert receiver_ids of added messages match family_phone_user_ids (ignore_order).",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert no replies sent to non_family_phone_user_ids.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert all added messages contain expected_reply text (normalize_text).",
+        "label": "no_op_fail",
+        "severity": "minor"
+    }
+]

@@ -3,7 +3,7 @@ from typing import Any, Literal, Self, TypeVar, cast
 from typing import get_args as get_type_args  # noqa
 
 from munch import Munch
-from typing_extensions import TypedDict
+from typing_extensions import NotRequired, TypedDict
 
 from appworld.common.registrable import Registrable as _Registrable
 
@@ -83,6 +83,7 @@ class CustomErrorMessageMunch(Munch):  # type: ignore
 class TestData(TypedDict):
     requirement: str
     label: Literal["no_op_fail", "no_op_pass"]
+    severity: NotRequired[Literal["critical", "minor", "cosmetic"]]
 
 
 class Registrable(_Registrable):

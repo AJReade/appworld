@@ -1,0 +1,8 @@
+[
+    {"requirement": "assert answers match.", "label": "no_op_fail", "severity": "cosmetic"},
+    {"requirement": "assert model changes match venmo.Transaction.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "obtain added venmo.Transaction, assert 1 added, 0 updated, 0 removed.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert the added transaction receiver_id is private_data.overpayer_venmo_id.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert the added transaction amount is private_data.refund_amount.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert 0 venmo.PaymentRequest records changed.", "label": "no_op_pass", "severity": "cosmetic"}
+]

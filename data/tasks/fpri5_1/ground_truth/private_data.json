@@ -1,0 +1,19 @@
+{
+    "groups_to_settle": [
+        {"group_id": 13, "group_name": "Siblings"},
+        {"group_id": 68, "group_name": "HyperNex Genomics"},
+        {"group_id": 10, "group_name": "Roommates"},
+        {"group_id": 140, "group_name": "Climbers"},
+        {"group_id": 128, "group_name": "Skiing Crew"},
+        {"group_id": 85, "group_name": "Vino Nights"},
+        {"group_id": 130, "group_name": "Gym Memberships"}
+    ],
+    "groups_to_skip": [
+        {"group_id": 120, "group_name": "Plant Lovers"},
+        {"group_id": 153, "group_name": "Puzzle Solvers"},
+        {"group_id": 79, "group_name": "Music Lovers"},
+        {"group_id": 82, "group_name": "Literary Club"}
+    ],
+    "threshold": 50.0,
+    "num_groups_to_settle": 7
+}

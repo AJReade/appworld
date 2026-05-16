@@ -1,0 +1,8 @@
+[
+    {"requirement": "assert answers match.", "label": "no_op_fail", "severity": "cosmetic"},
+    {"requirement": "assert splitwise.Payment in changed models.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "obtain added splitwise.Payment records, assert correct count added, 0 updated, 0 removed.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert group_ids of added payments match groups_to_settle.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert no payments added in groups_to_skip.", "label": "no_op_pass", "severity": "critical"},
+    {"requirement": "assert 0 splitwise.Expense records changed.", "label": "no_op_pass", "severity": "cosmetic"}
+]

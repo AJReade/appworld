@@ -91,11 +91,14 @@ class TestTracker:
     ) -> None:
         self.test_data = test_data
         self._test_requirement_to_label: dict[str, str] = {}
+        self._test_requirement_to_severity: dict[str, str] = {}
         self._num_tests: int | None = None
         self._num_no_op_fail_tests: int | None = None
         self._num_no_op_pass_tests: int | None = None
         if test_data is not None:
             self._test_requirement_to_label = dict_of(test_data, "requirement", "label")
+            for entry in test_data:
+                self._test_requirement_to_severity[entry["requirement"]] = entry.get("severity", "minor")
             self._num_tests = len(test_data)
             self._num_no_op_fail_tests = len(find_all(test_data, label="no_op_fail"))
             self._num_no_op_pass_tests = len(find_all(test_data, label="no_op_pass"))
@@ -180,11 +183,46 @@ class TestTracker:
     def success(self) -> bool:
         return self.pass_count == self.num_tests
 
+    @property
+    def graded_score(self) -> float:
+        """Severity-weighted score. Critical fail -> 0.0, otherwise weighted pass rate."""
+        all_results = [
+            {"severity": p.get("severity", "minor"), "passed": True} for p in self.passes
+        ] + [
+            {"severity": f.get("severity", "minor"), "passed": False} for f in self.failures
+        ]
+        if not all_results:
+            return 1.0
+
+        critical = [r for r in all_results if r["severity"] == "critical"]
+        non_critical = [r for r in all_results if r["severity"] != "critical"]
+
+        if any(not r["passed"] for r in critical):
+            return 0.0
+
+        if not non_critical:
+            return 1.0
+
+        weights = {"minor": 1.0, "cosmetic": 0.25}
+        total_weight = sum(weights.get(r["severity"], 1.0) for r in non_critical)
+        earned_weight = sum(
+            weights.get(r["severity"], 1.0) for r in non_critical if r["passed"]
+        )
+
+        critical_count = len(critical)
+        total_count = len(all_results)
+        critical_base = critical_count / total_count
+        non_critical_proportion = 1.0 - critical_base
+        non_critical_score = earned_weight / total_weight if total_weight > 0 else 1.0
+
+        return critical_base + (non_critical_proportion * non_critical_score)
+
     def to_dict(self, stats_only: bool = False) -> dict[str, Any]:
         dict_: dict[str, Any] = {
             "success": self.success,
             "difficulty": self.difficulty,
             "num_tests": self.num_tests,
+            "graded_score": self.graded_score,
         }
         if not stats_only:
             dict_["passes"] = self.passes
@@ -205,7 +243,11 @@ class TestTracker:
             )
         test_data: list[TestData] = []
         for pass_ in dict_["passes"] + dict_["failures"]:
-            test_data.append({"requirement": pass_["requirement"], "label": pass_["label"]})
+            test_data.append({
+                "requirement": pass_["requirement"],
+                "label": pass_["label"],
+                "severity": pass_.get("severity", "minor"),
+            })
         difficulty = dict_["difficulty"]
         test_tracker = cls(
             test_data=test_data, difficulty=difficulty, suppress_errors=suppress_errors
@@ -267,6 +309,58 @@ class TestTracker:
             write_file(print_output, save_file_path)
         return print_output
 
+    @staticmethod
+    def _maybe_downgrade_near_miss(
+        severity: str, exc_value: BaseException | None
+    ) -> str:
+        """Downgrade critical to minor if a set/list comparison failed only due to missing entries.
+
+        Only downgrades when:
+        - The actual values are a subset of expected (no wrong entries added)
+        - At least 80% of expected entries are present
+        If actual contains entries NOT in expected, that's a wrong action — stays critical.
+        """
+        if exc_value is None:
+            return severity
+        msg = str(exc_value)
+        try:
+            import re
+
+            def parse_items(s: str) -> set:
+                s = s.strip("{}[]")
+                return {item.strip().strip("'\"") for item in s.split(",") if item.strip()}
+
+            # Try set patterns: {1, 2, 3} == {1, 2, 4}
+            set_pattern = r"\{[^{}]+\}"
+            found = re.findall(set_pattern, msg)
+            if len(found) >= 2:
+                actual = parse_items(found[0])
+                expected = parse_items(found[1])
+                if actual and expected:
+                    wrong_entries = actual - expected
+                    if wrong_entries:
+                        return severity
+                    missing = len(expected) - len(actual & expected)
+                    if missing > 0 and len(actual & expected) / len(expected) >= 0.8:
+                        return "minor"
+
+            # Try list patterns: [1, 2, 3] == [1, 2, 4]
+            list_pattern = r"\[[^\[\]]+\]"
+            found = re.findall(list_pattern, msg)
+            if len(found) >= 2:
+                actual = parse_items(found[0])
+                expected = parse_items(found[1])
+                if actual and expected:
+                    wrong_entries = actual - expected
+                    if wrong_entries:
+                        return severity
+                    missing = len(expected) - len(actual & expected)
+                    if missing > 0 and len(actual & expected) / len(expected) >= 0.8:
+                        return "minor"
+        except Exception:
+            pass
+        return severity
+
     def __call__(self, requirement: str) -> Self:
         self.requirement = dedent(requirement).strip()
         return self.__enter__()
@@ -288,7 +382,8 @@ class TestTracker:
                     "Make sure the passed test_data is correct."
                 )
             label = self._test_requirement_to_label.get(pass_requirement, None)
-            self.passes.append({"requirement": pass_requirement, "label": label})
+            severity = self._test_requirement_to_severity.get(pass_requirement, "minor")
+            self.passes.append({"requirement": pass_requirement, "label": label, "severity": severity})
         else:
             fail_trace = ""
             if isinstance(exc_value, Exception):
@@ -300,11 +395,15 @@ class TestTracker:
                     "Make sure the passed test_data is correct."
                 )
             label = self._test_requirement_to_label.get(fail_requirement, None)
+            severity = self._test_requirement_to_severity.get(fail_requirement, "minor")
+            if severity == "critical":
+                severity = self._maybe_downgrade_near_miss(severity, exc_value)
             self.failures.append(
                 {
                     "requirement": fail_requirement,
                     "trace": fail_trace,
                     "label": label,
+                    "severity": severity,
                 }
             )
         self.requirement = None

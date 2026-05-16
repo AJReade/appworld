@@ -1,0 +1,3 @@
+["INSERT INTO global_text_messages (id, created_at, record_hash, sender_id, receiver_id, message) VALUES (?, ?, ?, ?, ?, ?)",[9001,"2023-05-18T09:00:00","fmem1_song_rec_msg",19,15,"Hey Jordan! You should listen to 'Painting Shadows on the Wall' by Jasper Skye, it's amazing!"],false]
+["INSERT INTO user_text_messages (created_at, record_hash, global_text_message_id, user_id) VALUES (?, ?, ?, ?)",["2023-05-18T09:00:00","fmem1_utm_sender",9001,19],false]
+["INSERT INTO user_text_messages (created_at, record_hash, global_text_message_id, user_id) VALUES (?, ?, ?, ?)",["2023-05-18T09:00:00","fmem1_utm_receiver",9001,15],false]

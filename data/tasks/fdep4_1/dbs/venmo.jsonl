@@ -1,0 +1,2 @@
+["INSERT INTO friendships (created_at, record_hash, user_id, friend_id) VALUES (?, ?, ?, ?)",["2023-05-18 08:00:00.000000","fdep4frnd1=",15,61],false]
+["INSERT INTO friendships (created_at, record_hash, user_id, friend_id) VALUES (?, ?, ?, ?)",["2023-05-18 08:00:00.000000","fdep4frnd2=",15,1],false]

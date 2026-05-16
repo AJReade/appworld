@@ -1,0 +1,12 @@
+[
+    {
+        "requirement": "assert \",\"-split ground_truth_answer and predicted_answer are the same,\nignore_order and normalize_text.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert no model changes.",
+        "label": "no_op_pass",
+        "severity": "cosmetic"
+    }
+]

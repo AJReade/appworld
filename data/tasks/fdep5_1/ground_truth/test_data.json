@@ -1,0 +1,7 @@
+[
+    {"requirement": "assert answers match.", "label": "no_op_fail", "severity": "cosmetic"},
+    {"requirement": "assert file_system.File in changed models.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "obtain added file_system.File records, assert 1 added, 0 updated, 0 removed.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert added file tilde_path matches private_data.expected_tilde_path.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert 0 simple_note.Note records changed.", "label": "no_op_pass", "severity": "cosmetic"}
+]

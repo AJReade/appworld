@@ -110,7 +110,13 @@ generate/data/LICENSE
 generate/data/README_BEFORE_SHARING.md
 generate/tasks/task_generators/LICENSE
 generate/tasks/task_generators/README_BEFORE_SHARING.md
-data/
+data/*
+!data/tasks/
+data/tasks/*
+!data/tasks/fmem*/
+!data/tasks/fdep*/
+!data/tasks/fpri*/
+!data/tasks/fcust*/
 
 # AppWorld (private)
 src/appworld/apps/admin
@@ -129,3 +135,4 @@ generate/tasks/task_generators/
 tests/package/apps
 tests/generation
 # !generate/data
+

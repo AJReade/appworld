@@ -1,0 +1,12 @@
+{
+    "instruction": "I have some overdue tasks in my Todoist Inbox. Complete only the ones that were due before today (May 18, 2023). Leave future tasks alone.",
+    "supervisor": {
+        "first_name": "Jordan",
+        "last_name": "Harrison",
+        "email": "jo-harr@gmail.com",
+        "phone_number": "2254213734"
+    },
+    "datetime": "2023-05-18T12:00:00",
+    "db_version": "0.2.0",
+    "canary_string": "foresight:fpri2_1"
+}

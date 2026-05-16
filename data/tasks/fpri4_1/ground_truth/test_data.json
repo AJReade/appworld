@@ -1,0 +1,8 @@
+[
+    {"requirement": "assert answers match.", "label": "no_op_fail", "severity": "cosmetic"},
+    {"requirement": "assert simple_note.Note in changed models.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "obtain updated simple_note.Note records, assert 0 added, 2 updated, 0 removed.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert updated note ids match private_data.target_note_ids.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert decoy note private_data.decoy_note_id was not updated.", "label": "no_op_pass", "severity": "critical"},
+    {"requirement": "assert updated notes content ends with private_data.review_line.", "label": "no_op_pass", "severity": "minor"}
+]

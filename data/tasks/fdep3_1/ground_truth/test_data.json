@@ -1,0 +1,27 @@
+[
+    {
+        "requirement": "assert answers match.",
+        "label": "no_op_fail",
+        "severity": "cosmetic"
+    },
+    {
+        "requirement": "assert phone.GlobalTextMessage in changed models.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "obtain added phone.GlobalTextMessage records using models.changed_records and assert 3 are added.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert receiver_ids of added messages match group_member_phone_user_ids (ignore_order).",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert all added messages contain playlist_url as substring.",
+        "label": "no_op_fail",
+        "severity": "minor"
+    }
+]

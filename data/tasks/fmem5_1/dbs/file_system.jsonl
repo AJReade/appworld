@@ -1,0 +1,1 @@
+["INSERT INTO directories (id, record_hash, path, tilde_path, user_id, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?)",[3500,"fmem5_backups_dir","/home/jordan/backups/","~/backups/",15,"2023-05-17T10:00:00","2023-05-17T10:00:00"],false]

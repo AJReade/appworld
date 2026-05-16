@@ -1,0 +1,27 @@
+[
+    {
+        "requirement": "assert answers match.",
+        "label": "no_op_fail",
+        "severity": "cosmetic"
+    },
+    {
+        "requirement": "assert phone.Contact in changed models.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "obtain added, updated, removed phone.Contact records using models.changed_records,\nand assert 1 is added, 0 is updated, and 0 is removed.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert the added contact first_name and last_name match \"Stephen\" and \"Mccoy\".",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert no contacts were deleted.",
+        "label": "no_op_pass",
+        "severity": "cosmetic"
+    }
+]

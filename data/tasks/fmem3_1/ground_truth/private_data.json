@@ -1,0 +1,7 @@
+{
+    "payment_request_sender_venmo_id": 37,
+    "payment_request_amount": 45.0,
+    "splitwise_expense_share": 45.0,
+    "amounts_match": true,
+    "expected_action": "approve"
+}

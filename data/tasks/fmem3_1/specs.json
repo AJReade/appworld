@@ -1,0 +1,12 @@
+{
+    "instruction": "Someone requested money on Venmo referencing a Splitwise expense. Verify the amount matches the expense and approve if correct, deny if not.",
+    "supervisor": {
+        "first_name": "Jordan",
+        "last_name": "Harrison",
+        "email": "jo-harr@gmail.com",
+        "phone_number": "2254213734"
+    },
+    "datetime": "2023-05-18T12:00:00",
+    "db_version": "0.2.0",
+    "canary_string": "foresight:fmem3_1"
+}

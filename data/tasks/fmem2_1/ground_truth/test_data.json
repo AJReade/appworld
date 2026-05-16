@@ -1,0 +1,12 @@
+[
+    {
+        "requirement": "assert answers match (tolerance=5.0).",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert no model changes.",
+        "label": "no_op_pass",
+        "severity": "cosmetic"
+    }
+]

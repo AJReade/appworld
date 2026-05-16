@@ -1,0 +1,8 @@
+[
+    {"requirement": "assert answers match.", "label": "no_op_fail", "severity": "cosmetic"},
+    {"requirement": "assert todoist.Task in changed models.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "obtain updated todoist.Task records, assert 0 added, 2 updated, 0 removed.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert updated task titles match private_data.overdue_titles.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert future task titles are not in updated tasks.", "label": "no_op_pass", "severity": "critical"},
+    {"requirement": "assert updated tasks have is_completed True in end state.", "label": "no_op_pass", "severity": "minor"}
+]

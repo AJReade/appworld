@@ -1,0 +1,8 @@
+[
+    {"requirement": "assert answers match.", "label": "no_op_fail", "severity": "cosmetic"},
+    {"requirement": "assert venmo.PaymentRequest in changed models.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "obtain updated venmo.PaymentRequest, assert exactly 3 updated, 0 added, 0 removed.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert updated requests are the rent ones by checking their IDs.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert all updated requests were approved.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert non-rent requests were not modified.", "label": "no_op_pass", "severity": "critical"}
+]

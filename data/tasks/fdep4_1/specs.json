@@ -1,0 +1,12 @@
+{
+    "instruction": "I recently added some friends on Venmo. Check if any of them are missing from my phone contacts and add the missing ones using their Venmo profile info.",
+    "supervisor": {
+        "first_name": "Jordan",
+        "last_name": "Harrison",
+        "email": "jo-harr@gmail.com",
+        "phone_number": "2254213734"
+    },
+    "datetime": "2023-05-18T12:00:00",
+    "db_version": "0.2.0",
+    "canary_string": "appworld:fdep4_1:a1b2c3d4-e5f6-7890-abcd-ef1234567890"
+}

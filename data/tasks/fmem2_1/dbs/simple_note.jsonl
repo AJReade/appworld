@@ -1,0 +1,2 @@
+["INSERT INTO notes (tags, created_at, updated_at, data, record_hash, user_id, title, content, pinned) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",["[\"finance\"]","2023-05-01 09:00:00.000000","2023-05-01 09:00:00.000000","null","fmem2note1=",15,"May Budget","# May Budget\n\nMonthly spending limit: $1000",0],false]
+["INSERT INTO notes_fts (id, saved_search_text) VALUES (?, ?)",[5006,"may budget # may budget monthly spending limit: $1000 finance"],false]

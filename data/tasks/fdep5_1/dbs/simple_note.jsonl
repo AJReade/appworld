@@ -1,0 +1,1 @@
+["INSERT INTO notes (id, record_hash, user_id, title, content, tags, created_at, updated_at, pinned, data) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",[5005,"fdep5_project_status",15,"Project Status Update","# Project Status Update\n\nMilestone 1: Complete\nMilestone 2: In Progress\nDeadline: June 1, 2023","[\"work\"]","2023-05-17T09:00:00","2023-05-17T09:00:00",false,"{}"],false]

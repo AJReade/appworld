@@ -1,0 +1,6 @@
+[
+    {"requirement": "assert answers match.", "label": "no_op_fail", "severity": "cosmetic"},
+    {"requirement": "assert spotify.MusicPlayer in changed models.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert private_data.target_song_id is in the music player queue_song_ids in end state.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert 0 spotify.Playlist records changed.", "label": "no_op_pass", "severity": "cosmetic"}
+]

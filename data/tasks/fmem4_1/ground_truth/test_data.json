@@ -1,0 +1,9 @@
+[
+    {"requirement": "assert answers match.", "label": "no_op_fail", "severity": "cosmetic"},
+    {"requirement": "assert model changes match venmo.Transaction.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "obtain added, updated, removed venmo.Transaction records using models.changed_records,\nand assert correct number added, 0 updated, 0 removed.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert receiver_ids of added transactions match private_data.due_recipient_venmo_ids.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert amounts of added transactions match expected bill amounts.", "label": "no_op_fail", "severity": "critical"},
+    {"requirement": "assert no transactions were made to non-due bill recipients.", "label": "no_op_pass", "severity": "minor"},
+    {"requirement": "assert 0 venmo.PaymentRequest records were added, updated, or removed.", "label": "no_op_pass", "severity": "cosmetic"}
+]

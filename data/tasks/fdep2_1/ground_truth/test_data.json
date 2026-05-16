@@ -1,0 +1,27 @@
+[
+    {
+        "requirement": "assert answers match.",
+        "label": "no_op_fail",
+        "severity": "cosmetic"
+    },
+    {
+        "requirement": "assert gmail.Email in changed models.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "obtain added gmail.Email records using models.changed_records and assert 1 is added.",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert the added email subject matches \"Payment Receipt\" (normalize_text=True).",
+        "label": "no_op_fail",
+        "severity": "critical"
+    },
+    {
+        "requirement": "assert the added email body contains transaction amount \"147\" as substring.",
+        "label": "no_op_fail",
+        "severity": "minor"
+    }
+]

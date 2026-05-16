@@ -1,0 +1,4 @@
+["INSERT INTO expenses (id, debtor_ids, participant_ids, created_at, record_hash, user_id, group_id, payer_id, description, amount, deleted, receipt_file_name, receipt_file_content, receipt_download_count) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",[6000,"[15, 16]","[37]","2023-05-17T15:00:00","fmem3_exp",37,128,37,"Skiing Crew expense",135.0,0,null,null,0],false]
+["INSERT INTO expenses_fts (id, saved_search_text) VALUES (?, ?)",[6000,"skiing crew expense anita burch anita.burch@gmail.com jordan harrison jo-harr@gmail.com anthony harrison an-harrison@gmail.com"],false]
+["INSERT INTO expense_shares (id, created_at, record_hash, expense_id, debtor_id, share_amount) VALUES (?, ?, ?, ?, ?, ?)",[12000,"2023-05-17T15:00:00","fmem3_share_15",6000,15,45.0],false]
+["INSERT INTO expense_shares (id, created_at, record_hash, expense_id, debtor_id, share_amount) VALUES (?, ?, ?, ?, ?, ?)",[12001,"2023-05-17T15:00:00","fmem3_share_16",6000,16,45.0],false]

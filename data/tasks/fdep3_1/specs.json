@@ -1,0 +1,12 @@
+{
+    "instruction": "Share the URL of my 'Bootcamp Beats: Fitness Frenzy' Spotify playlist with everyone in my 'Gym Memberships' Splitwise group via text message.",
+    "supervisor": {
+        "first_name": "Jordan",
+        "last_name": "Harrison",
+        "email": "jo-harr@gmail.com",
+        "phone_number": "2254213734"
+    },
+    "datetime": "2023-05-18T12:00:00",
+    "db_version": "0.2.0",
+    "canary_string": "appworld:fdep3_1:e5f6a7b8-c9d0-1234-efab-345678901234"
+}
