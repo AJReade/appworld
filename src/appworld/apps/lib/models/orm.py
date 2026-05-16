@@ -21,7 +21,7 @@ from typing import (
 )
 from typing import get_args as get_type_args
 
-import orjson
+import msgspec.json as _msgspec_json
 import xxhash
 from fastapi import HTTPException
 from fastapi.encoders import jsonable_encoder
@@ -1080,7 +1080,7 @@ class SQLModel(Registrable, _SQLModel):
             key: value.isoformat() if isinstance(value, datetime) else value
             for key, value in hash_dict.items()
         }
-        serialized = orjson.dumps(hash_dict, option=orjson.OPT_SORT_KEYS)
+        serialized = _msgspec_json.encode(dict(sorted(hash_dict.items())))
         hash_obj = xxhash.xxh64()
         hash_obj.update(serialized)
         record_hash = base64.b64encode(hash_obj.digest()).decode()

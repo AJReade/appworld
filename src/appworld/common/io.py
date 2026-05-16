@@ -9,7 +9,21 @@ from datetime import date, datetime
 from typing import Any, Literal, cast
 from typing import get_args as get_type_args  # noqa: F401 (better name)
 
-import orjson
+import msgspec.json as _msgspec_json
+
+
+class _MsgspecCompat:
+    """Drop-in replacement for orjson using msgspec."""
+    @staticmethod
+    def loads(data):
+        return _msgspec_json.decode(data)
+
+    @staticmethod
+    def dumps(data):
+        return _msgspec_json.encode(data)
+
+
+orjson = _MsgspecCompat
 import yaml
 from munch import unmunchify
 from pendulum import Date as _Date
