@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import shutil
 import sqlite3
+import threading
 from collections import Counter, defaultdict
 from functools import cache, lru_cache
 from sqlite3 import Connection as SQLite3Connection
@@ -210,37 +211,43 @@ class ModelHashHandler:
 
 class CachedDBHandler:
     cache: ClassVar[dict[str, tuple[SQLEngine, DBChangesTracker]]] = {}
+    _lock: ClassVar[threading.Lock] = threading.Lock()
 
     @classmethod
     def has(cls, db_app_path: str) -> bool:
-        return db_app_path in cls.cache
+        with cls._lock:
+            return db_app_path in cls.cache
 
     @classmethod
     def is_empty(cls) -> bool:
-        return not bool(cls.cache)
+        with cls._lock:
+            return not bool(cls.cache)
 
     @classmethod
     def get(cls, db_app_path: str) -> tuple[SQLEngine, DBChangesTracker] | None:
-        return cls.cache.get(db_app_path, None)
+        with cls._lock:
+            return cls.cache.get(db_app_path, None)
 
     @classmethod
     def set(cls, db_app_path: str, engine: SQLEngine, tracker: DBChangesTracker) -> None:
-        cls.cache[db_app_path] = (engine, tracker)
+        with cls._lock:
+            cls.cache[db_app_path] = (engine, tracker)
 
     @classmethod
     def reset(cls, key_substring: str | None = None) -> None:
-        to_remove_db_app_paths: set[str] = set()
-        for db_app_path, (engine, tracker) in cls.cache.items():
-            if key_substring is None or key_substring in db_app_path:
-                tracker.reset()
-                engine.dispose()
-                engine.raw_connection().connection.close()  # type: ignore[unused-ignore,attr-defined]
-                to_remove_db_app_paths.add(db_app_path)
-        if key_substring is not None:
-            for to_remove_db_app_path in to_remove_db_app_paths:
-                cls.cache.pop(to_remove_db_app_path)
-        else:
-            cls.cache = {}
+        with cls._lock:
+            to_remove_db_app_paths: set[str] = set()
+            for db_app_path, (engine, tracker) in cls.cache.items():
+                if key_substring is None or key_substring in db_app_path:
+                    tracker.reset()
+                    engine.dispose()
+                    engine.raw_connection().connection.close()  # type: ignore[unused-ignore,attr-defined]
+                    to_remove_db_app_paths.add(db_app_path)
+            if key_substring is not None:
+                for to_remove_db_app_path in to_remove_db_app_paths:
+                    cls.cache.pop(to_remove_db_app_path)
+            else:
+                cls.cache = {}
 
 
 def set_sqlite_pragma(dbapi_connection: SQLite3Connection, connection_record: Connection) -> None:
