@@ -132,3 +132,4 @@ generate/tasks/task_generators/
 # tests/generation — committed so appworld install --repo is not needed
 # !generate/data
 
+erl_crash.dump
