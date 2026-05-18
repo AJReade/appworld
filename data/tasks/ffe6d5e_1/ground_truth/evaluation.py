@@ -74,6 +74,7 @@ def evaluate(
             "any in",
             added_global_text_message.message,
             normalize_text=True,
+            labels=("expected", "actual"),
         )
     with test(
         """
@@ -100,6 +101,7 @@ def evaluate(
             "all not in",
             added_global_text_message.message,
             normalize_text=True,
+            labels=("expected", "actual"),
         )
     with test(
         """

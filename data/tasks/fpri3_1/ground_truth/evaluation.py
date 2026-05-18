@@ -64,7 +64,7 @@ def evaluate(
         """
     ):
         for nid in private_data.non_family_phone_user_ids:
-            test.case(nid, "not in", [msg.receiver_id for msg in added_messages])
+            test.case(nid, "not in", [msg.receiver_id for msg in added_messages], labels=("expected", "actual"))
     with test(
         """
         assert all added messages contain expected_reply text (normalize_text).

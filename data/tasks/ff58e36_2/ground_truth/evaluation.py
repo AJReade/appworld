@@ -71,6 +71,7 @@ def evaluate(
             private_data.to_befriend_venmo_user_ids_1,
             "all in",
             newly_befriended_venmo_user_ids,
+            labels=("expected", "actual"),
         )
     with test(
         """
@@ -81,4 +82,5 @@ def evaluate(
             private_data.to_befriend_venmo_user_ids_2,
             "all in",
             newly_befriended_venmo_user_ids,
+            labels=("expected", "actual"),
         )

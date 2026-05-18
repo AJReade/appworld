@@ -46,7 +46,7 @@ def evaluate(test, public_data, private_data, main_user, models, ground_truth_an
     """):
         actual_titles = list_of(updated, "title")
         for title in private_data.future_titles:
-            test.case(title, "not in", actual_titles)
+            test.case(title, "not in", actual_titles, labels=("expected", "actual"))
 
     with test("""
         assert updated tasks have is_completed True in end state.

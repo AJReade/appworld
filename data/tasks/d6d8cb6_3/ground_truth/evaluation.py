@@ -116,7 +116,7 @@ def evaluate(
         assert the email with that subject has "#{to_return_order_id.id}" in its body.
         """
     ):
-        test.case(f"#{private_data.to_return_order_id}", "in", fwd_email.body)
+        test.case(f"#{private_data.to_return_order_id}", "in", fwd_email.body, labels=("expected", "actual"))
     with test(
         """
         assert 0 records have been updated or deleted from amazon.Address using models.changed_records.

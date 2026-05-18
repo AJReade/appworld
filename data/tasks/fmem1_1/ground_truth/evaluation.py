@@ -25,7 +25,7 @@ def evaluate(test, public_data, private_data, main_user, models, ground_truth_an
     with test("""
         assert spotify.MusicPlayer in changed models.
     """):
-        test.case("spotify.MusicPlayer", "in", models.changed_model_names())
+        test.case("spotify.MusicPlayer", "in", models.changed_model_names(), labels=("expected", "actual"))
 
     with test("""
         assert private_data.target_song_id is in the music player queue_song_ids in end state.

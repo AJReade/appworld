@@ -41,7 +41,7 @@ def evaluate(
         assert gmail.Email in changed models.
         """
     ):
-        test.case("gmail.Email", "in", models.changed_model_names())
+        test.case("gmail.Email", "in", models.changed_model_names(), labels=("expected", "actual"))
     with test(
         """
         obtain added gmail.Email records using models.changed_records and assert 1 is added.
@@ -61,4 +61,4 @@ def evaluate(
         assert the added email body contains transaction amount "147" as substring.
         """
     ):
-        test.case(str(int(private_data.transaction_amount)), "in", added_email.body)
+        test.case(str(int(private_data.transaction_amount)), "in", added_email.body, labels=("expected", "actual"))

@@ -25,7 +25,7 @@ def evaluate(test, public_data, private_data, main_user, models, ground_truth_an
     with test("""
         assert file_system.File in changed models.
     """):
-        test.case("file_system.File", "in", models.changed_model_names())
+        test.case("file_system.File", "in", models.changed_model_names(), labels=("expected", "actual"))
 
     with test("""
         obtain added file_system.File records, assert 1 added, 0 updated, 0 removed.

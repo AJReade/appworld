@@ -43,6 +43,7 @@ def evaluate(
             predicted_song_titles,
             ignore_order=True,
             normalize_text=True,
+            labels=("expected", "actual"),
         )
     with test(
         """

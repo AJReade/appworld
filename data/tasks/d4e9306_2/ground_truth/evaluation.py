@@ -63,6 +63,7 @@ def evaluate(
             private_data.to_be_followed_artist_ids_by_songs,
             "all in",
             newly_followed_artist_ids,
+            labels=("expected", "actual"),
         )
     with test(
         """
@@ -73,6 +74,7 @@ def evaluate(
             private_data.to_be_followed_artist_ids_by_albums,
             "all in",
             newly_followed_artist_ids,
+            labels=("expected", "actual"),
         )
     with test(
         """

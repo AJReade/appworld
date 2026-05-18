@@ -48,7 +48,7 @@ def evaluate(test, public_data, private_data, main_user, models, ground_truth_an
         skip_group_ids = [g["group_id"] for g in private_data.groups_to_skip]
         actual_group_ids = list_of(added, "group_id")
         for gid in skip_group_ids:
-            test.case(gid, "not in", actual_group_ids)
+            test.case(gid, "not in", actual_group_ids, labels=("expected", "actual"))
 
     with test("""
         assert 0 splitwise.Expense records changed.

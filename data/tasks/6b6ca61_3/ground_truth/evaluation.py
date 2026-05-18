@@ -256,4 +256,5 @@ def evaluate(
             private_data.file_system_user_id,
             "not in",
             list_of(added_files + updated_files + removed_files, "user_id"),
+            labels=("expected", "actual"),
         )

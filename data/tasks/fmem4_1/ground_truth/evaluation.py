@@ -83,7 +83,7 @@ def evaluate(
     ):
         actual_receiver_ids = list_of(added_txns, "receiver_id")
         for nid in private_data.not_due_recipient_venmo_ids:
-            test.case(nid, "not in", actual_receiver_ids)
+            test.case(nid, "not in", actual_receiver_ids, labels=("expected", "actual"))
 
     with test(
         """

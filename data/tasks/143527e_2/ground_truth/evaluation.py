@@ -83,6 +83,7 @@ def evaluate(
             "in",
             added_email.body,
             normalize_text=True,
+            labels=("expected", "actual"),
         )
     with test(
         """
@@ -95,6 +96,7 @@ def evaluate(
             "all in",
             added_email.body,
             normalize_text=True,
+            labels=("expected", "actual"),
         )
         remaining_song_titles = subtract_lists(
             list_of(models.start.spotify.Song.all(), "title"), private_data.favorite_song_titles

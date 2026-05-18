@@ -84,6 +84,7 @@ def evaluate(
             private_data.ticket_content_to_location[added_file_content],
             "==",
             public_data.selected_to_location,
+            labels=("expected", "actual"),
         )
     with test(
         """
@@ -94,6 +95,7 @@ def evaluate(
             private_data.ticket_content_to_flight_date_string[added_file_content],
             "==",
             private_data.selected_flight_date_string,
+            labels=("expected", "actual"),
         )
     with test(
         """

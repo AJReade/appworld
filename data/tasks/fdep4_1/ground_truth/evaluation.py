@@ -41,7 +41,7 @@ def evaluate(
         assert phone.Contact in changed models.
         """
     ):
-        test.case("phone.Contact", "in", models.changed_model_names())
+        test.case("phone.Contact", "in", models.changed_model_names(), labels=("expected", "actual"))
     with test(
         """
         obtain added, updated, removed phone.Contact records using models.changed_records,

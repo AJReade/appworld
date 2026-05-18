@@ -53,4 +53,4 @@ def evaluate(test, public_data, private_data, main_user, models, ground_truth_an
     """):
         updated_ids = set(list_of(updated, "id"))
         for nid in private_data.non_rent_request_ids:
-            test.case(nid, "not in", updated_ids)
+            test.case(nid, "not in", updated_ids, labels=("expected", "actual"))

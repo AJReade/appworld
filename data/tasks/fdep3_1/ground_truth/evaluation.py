@@ -42,7 +42,7 @@ def evaluate(
         assert phone.GlobalTextMessage in changed models.
         """
     ):
-        test.case("phone.GlobalTextMessage", "in", models.changed_model_names())
+        test.case("phone.GlobalTextMessage", "in", models.changed_model_names(), labels=("expected", "actual"))
     with test(
         """
         obtain added phone.GlobalTextMessage records using models.changed_records and assert 3 are added.

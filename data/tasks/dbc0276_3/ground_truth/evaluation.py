@@ -67,6 +67,7 @@ def evaluate(
             "all in",
             message.message,
             ignore_case=True,
+            labels=("expected", "actual"),
         )
     with test(
         """
@@ -77,6 +78,7 @@ def evaluate(
             [str(int(price)) for price in private_data.product_name_to_total_price.values()],
             "all in",
             message.message,
+            labels=("expected", "actual"),
         )
     with test(
         """

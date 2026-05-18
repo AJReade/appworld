@@ -57,7 +57,7 @@ def evaluate(
     ):
         updated_music_player = updated_music_players[0]
         test.case(
-            private_data.existing_queue_song_ids, "all in", updated_music_player.queue_song_ids
+            private_data.existing_queue_song_ids, "all in", updated_music_player.queue_song_ids, labels=("expected", "actual")
         )
     with test(
         """
@@ -65,7 +65,7 @@ def evaluate(
         """
     ):
         test.case(
-            private_data.to_be_added_queue_song_ids, "all in", updated_music_player.queue_song_ids
+            private_data.to_be_added_queue_song_ids, "all in", updated_music_player.queue_song_ids, labels=("expected", "actual")
         )
     with test(
         """
@@ -77,4 +77,5 @@ def evaluate(
             set(private_data.existing_queue_song_ids + private_data.to_be_added_queue_song_ids),
             "==",
             set(updated_music_player.queue_song_ids),
+            labels=("expected", "actual"),
         )
