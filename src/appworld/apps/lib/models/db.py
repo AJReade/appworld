@@ -157,7 +157,7 @@ class Database:
             target_storage_type = "memory" if "memory" in path else "disk"
             if "memory" in [source_storage_type, target_storage_type]:
                 source_connection = cls.connection
-                target_connection = sqlite3.connect(path)
+                target_connection = sqlite3.connect(path, check_same_thread=False)
                 source_connection.backup(target_connection)
             elif cls.path != path:
                 maybe_create_parent_directory(path)
@@ -306,7 +306,7 @@ def get_direct_cached_sqlite3_connection(db_app_path: str) -> SQLite3Connection:
 
 
 def get_direct_sqlite3_connection(db_app_path: str) -> SQLite3Connection:
-    connection = sqlite3.connect(db_app_path)
+    connection = sqlite3.connect(db_app_path, check_same_thread=False)
     connection.execute("PRAGMA mmap_size = 268435456")  # 256MB
     return connection
 
