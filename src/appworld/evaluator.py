@@ -163,30 +163,32 @@ class TestTracker:
             })
             raise
 
-    def case(self, *args: Any, **kwargs: Any) -> None:
+    def case(self, *args: Any, labels: tuple[str, str] = ("expected", "actual"), **kwargs: Any) -> None:
         self._num_case_calls += 1
         left = args[0] if len(args) > 0 else None
         condition = args[1] if len(args) > 1 else "is_truthy"
         right = args[2] if len(args) > 2 else None
+        left_label, right_label = labels
         try:
-            assert_plus(*args, **kwargs)
+            assert_plus(*args, **kwargs)  # labels not in kwargs — it's a named-only param
             self._current_comparisons.append({
-                "actual": _serialize(left),
+                left_label: _serialize(left),
                 "operator": condition,
-                "expected": _serialize(right),
+                right_label: _serialize(right),
                 "passed": True,
             })
         except Exception:
             self._current_comparisons.append({
-                "actual": _serialize(left),
+                left_label: _serialize(left),
                 "operator": condition,
-                "expected": _serialize(right),
+                right_label: _serialize(right),
                 "passed": False,
             })
             raise
 
-    def subcases(self, subcases_args: list[tuple[Any, ...]]) -> None:
+    def subcases(self, subcases_args: list[tuple[Any, ...]], labels: tuple[str, str] = ("expected", "actual")) -> None:
         self._num_case_calls += 1
+        left_label, right_label = labels
         for subcase_args in subcases_args:
             if len(subcase_args) not in (3, 4):
                 raise ValueError(
@@ -204,16 +206,16 @@ class TestTracker:
             try:
                 assert_plus(left, condition, right, **kwargs)
                 self._current_comparisons.append({
-                    "actual": _serialize(left),
+                    left_label: _serialize(left),
                     "operator": condition,
-                    "expected": _serialize(right),
+                    right_label: _serialize(right),
                     "passed": True,
                 })
             except Exception:
                 self._current_comparisons.append({
-                    "actual": _serialize(left),
+                    left_label: _serialize(left),
                     "operator": condition,
-                    "expected": _serialize(right),
+                    right_label: _serialize(right),
                     "passed": False,
                 })
                 raise
