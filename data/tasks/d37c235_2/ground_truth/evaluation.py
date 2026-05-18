@@ -44,25 +44,25 @@ def evaluate(
         assert all of private_data.official_inbox_promo_codes are in predicted_promo_codes.
         """
     ):
-        test.case(set(private_data.official_inbox_promo_codes), "all in", predicted_promo_codes)
+        test.case(set(private_data.official_inbox_promo_codes), "all in", predicted_promo_codes, labels=("expected", "actual"))
     with test(
         """
         assert all of private_data.official_spam_promo_codes are in predicted_promo_codes.
         """
     ):
-        test.case(set(private_data.official_spam_promo_codes), "all in", predicted_promo_codes)
+        test.case(set(private_data.official_spam_promo_codes), "all in", predicted_promo_codes, labels=("expected", "actual"))
     with test(
         """
         assert all of private_data.official_archived_promo_codes are in predicted_promo_codes.
         """
     ):
-        test.case(set(private_data.official_archived_promo_codes), "all in", predicted_promo_codes)
+        test.case(set(private_data.official_archived_promo_codes), "all in", predicted_promo_codes, labels=("expected", "actual"))
     with test(
         """
         assert all of private_data.non_official_promo_codes are in predicted_promo_codes.
         """
     ):
-        test.case(set(private_data.non_official_promo_codes), "all in", predicted_promo_codes)
+        test.case(set(private_data.non_official_promo_codes), "all in", predicted_promo_codes, labels=("expected", "actual"))
     with test(
         """
         assert no model changes.
