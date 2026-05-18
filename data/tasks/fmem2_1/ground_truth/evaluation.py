@@ -35,7 +35,7 @@ def evaluate(
         assert answers match (tolerance=5.0).
         """
     ):
-        test.case(ground_truth_answer, "==", predicted_answer, normalize=float, tolerance=5.0)
+        test.case(ground_truth_answer, "==", predicted_answer, normalize=float, tolerance=5.0, labels=("expected", "actual"))
     with test(
         """
         assert no model changes.

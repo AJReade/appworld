@@ -71,7 +71,7 @@ def evaluate(
         assert the updated note content has private_data.current_month_key as a substring.
         """
     ):
-        test.case(private_data.current_month_key, "in", updated_note.content)
+        test.case(private_data.current_month_key, "in", updated_note.content, labels=("expected", "actual"))
     with test(
         """
         parse the contents of the updated note to obtain month_to_amount and
@@ -92,7 +92,7 @@ def evaluate(
         assert the private_data.note_title is still in the first line of the updated_note's content.
         """
     ):
-        test.case(private_data.note_title, "in", updated_note.content.strip().split("\n")[0])
+        test.case(private_data.note_title, "in", updated_note.content.strip().split("\n")[0], labels=("expected", "actual"))
     with test(
         """
         assert the private_data.current_month_value is in month_to_amount.values() with tolerance of 1.01.
@@ -103,6 +103,7 @@ def evaluate(
             "in",
             list(month_to_amount.values()),
             tolerance=1.01,
+            labels=("expected", "actual"),
         )
     with test(
         """

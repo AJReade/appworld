@@ -45,7 +45,7 @@ def evaluate(test, public_data, private_data, main_user, models, ground_truth_an
         assert decoy note private_data.decoy_note_id was not updated.
     """):
         actual_ids = list_of(updated, "id")
-        test.case(private_data.decoy_note_id, "not in", actual_ids)
+        test.case(private_data.decoy_note_id, "not in", actual_ids, labels=("expected", "actual"))
 
     with test("""
         assert updated notes content ends with private_data.review_line.

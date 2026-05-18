@@ -96,7 +96,7 @@ def evaluate(
         """
     ):
         product_names = list_of(order_items, "product.name")
-        test.case(public_data.product_name, "in", product_names)
+        test.case(public_data.product_name, "in", product_names, labels=("expected", "actual"))
     with test(
         """
         if private_data.cheaper_option is "direct",

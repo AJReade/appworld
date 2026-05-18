@@ -37,7 +37,7 @@ def evaluate(
     ):
         ground_truth_answer = float(ground_truth_answer)
         predicted_answer = float(predicted_answer)
-        test.case(ground_truth_answer, "==", predicted_answer, tolerance=0.51)
+        test.case(ground_truth_answer, "==", predicted_answer, tolerance=0.51, labels=("expected", "actual"))
     with test(
         """
         assert no model changes.

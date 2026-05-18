@@ -77,9 +77,9 @@ def evaluate(
     ):
         order = added_orders[0]
         ordered_product_names = list_of(order.order_items, "product.name")
-        test.case(public_data.product_name_1, "in", ordered_product_names)
-        test.case(public_data.product_name_2, "in", ordered_product_names)
-        test.case(public_data.product_name_3, "in", ordered_product_names)
+        test.case(public_data.product_name_1, "in", ordered_product_names, labels=("expected", "actual"))
+        test.case(public_data.product_name_2, "in", ordered_product_names, labels=("expected", "actual"))
+        test.case(public_data.product_name_3, "in", ordered_product_names, labels=("expected", "actual"))
     with test(
         """
         assert the new order contains quantity_1 quantity of product_name_1,

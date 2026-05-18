@@ -31,7 +31,7 @@ def evaluate(test, public_data, private_data, main_user, models, ground_truth_an
         assert private_data.target_song_id is in the music player queue_song_ids in end state.
     """):
         music_player = models.end.spotify.MusicPlayer.first()
-        test.case(private_data.target_song_id, "in", music_player.queue_song_ids)
+        test.case(private_data.target_song_id, "in", music_player.queue_song_ids, labels=("expected", "actual"))
 
     with test("""
         assert 0 spotify.Playlist records changed.

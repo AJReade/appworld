@@ -36,7 +36,7 @@ def evaluate(
         (normalize_text=True)
         """
     ):
-        test.case(private_data.quotes, "any in", predicted_answer, normalize_text=True)
+        test.case(private_data.quotes, "any in", predicted_answer, normalize_text=True, labels=("expected", "actual"))
     with test(
         """
         assert the predicted answer is substring in any one of the private_data.quotes

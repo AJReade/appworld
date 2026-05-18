@@ -71,10 +71,10 @@ def evaluate(
     ):
         if public_data.remove_operation == "archive":
             updated_thread_ids = list_of(updated_user_email_threads, "id")
-            test.case(private_data.unread_thread_ids, "all not in", updated_thread_ids)
+            test.case(private_data.unread_thread_ids, "all not in", updated_thread_ids, labels=("expected", "actual"))
         elif public_data.remove_operation == "delete":
             deleted_thread_ids = list_of(deleted_user_email_threads, "id")
-            test.case(private_data.unread_thread_ids, "all not in", deleted_thread_ids)
+            test.case(private_data.unread_thread_ids, "all not in", deleted_thread_ids, labels=("expected", "actual"))
     with test(
         """
         if public_data.remove_operation is "archive",
@@ -84,9 +84,9 @@ def evaluate(
         """
     ):
         if public_data.remove_operation == "archive":
-            test.case(private_data.read_to_not_remove_thread_ids, "all not in", updated_thread_ids)
+            test.case(private_data.read_to_not_remove_thread_ids, "all not in", updated_thread_ids, labels=("expected", "actual"))
         elif public_data.remove_operation == "delete":
-            test.case(private_data.read_to_not_remove_thread_ids, "all not in", deleted_thread_ids)
+            test.case(private_data.read_to_not_remove_thread_ids, "all not in", deleted_thread_ids, labels=("expected", "actual"))
     with test(
         """
         if public_data.remove_operation is "archive",

@@ -64,14 +64,14 @@ def evaluate(
         """
     ):
         updated_thread_ids = list_of(updated_user_email_threads, "id")
-        test.case(private_data.archived_relative_thread_ids, "all not in", updated_thread_ids)
+        test.case(private_data.archived_relative_thread_ids, "all not in", updated_thread_ids, labels=("expected", "actual"))
     with test(
         """
         assert none of private_data.archived_non_relative_thread_ids are
         among updated gmail.UserEmailThread records.
         """
     ):
-        test.case(private_data.archived_non_relative_thread_ids, "all not in", updated_thread_ids)
+        test.case(private_data.archived_non_relative_thread_ids, "all not in", updated_thread_ids, labels=("expected", "actual"))
     with test(
         """
         assert all gmail.UserEmailThread with

@@ -66,10 +66,10 @@ def evaluate(
         """
     ):
         music_player = models.end.spotify.User.find_from(main_user).music_player
-        test.case(private_data.song_id, "==", music_player.current_song.id)
+        test.case(private_data.song_id, "==", music_player.current_song.id, labels=("expected", "actual"))
     with test(
         """
         assert music player's cursor is on the song by private_data.artist_id in the end state.
         """
     ):
-        test.case(private_data.artist_id, "in", music_player.current_song.artist_ids)
+        test.case(private_data.artist_id, "in", music_player.current_song.artist_ids, labels=("expected", "actual"))

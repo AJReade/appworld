@@ -60,13 +60,13 @@ def evaluate(
     ):
         added_emails, _, _ = models.changed_records("gmail.Email")
         added_emails_recipients = flatten(list_of(added_emails, "recipient_email_addresses"))
-        test.case(private_data.selected_candidate_emails, "all in", added_emails_recipients)
+        test.case(private_data.selected_candidate_emails, "all in", added_emails_recipients, labels=("expected", "actual"))
     with test(
         """
         assert all the private_data.rejected_candidate_emails have been added.
         """
     ):
-        test.case(private_data.rejected_candidate_emails, "all in", added_emails_recipients)
+        test.case(private_data.rejected_candidate_emails, "all in", added_emails_recipients, labels=("expected", "actual"))
     with test(
         """
         assert emails recipient addresses match private_data.selected_candidate_emails

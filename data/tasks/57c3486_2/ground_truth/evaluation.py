@@ -61,7 +61,7 @@ def evaluate(
     ):
         spotify_user = models.end.spotify.User.find_from(main_user)
         liked_song_ids = set_of(spotify_user.liked_songs, "id")
-        test.case(private_data.followed_artist_song_ids, "all in", liked_song_ids)
+        test.case(private_data.followed_artist_song_ids, "all in", liked_song_ids, labels=("expected", "actual"))
     with test(
         """
         assert none of the updated or removed song likes are from artists that main_user follows,

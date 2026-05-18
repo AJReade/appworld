@@ -60,7 +60,7 @@ def evaluate(
         """
     ):
         queue_song_ids = models.end.spotify.User.find_from(main_user).music_player.queue_song_ids
-        test.case(private_data.downloaded_song_ids, "all in", queue_song_ids)
+        test.case(private_data.downloaded_song_ids, "all in", queue_song_ids, labels=("expected", "actual"))
     with test(
         """
         assert no song_id outside of private_data.collection_song_ids are in

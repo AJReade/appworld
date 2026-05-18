@@ -63,19 +63,19 @@ def evaluate(
         """
     ):
         updated_thread_ids = set_of(updated_user_email_threads, "id")
-        test.case(private_data.priority_1_thread_ids, "all in", updated_thread_ids)
+        test.case(private_data.priority_1_thread_ids, "all in", updated_thread_ids, labels=("expected", "actual"))
     with test(
         """
         assert all IDs in private_data.priority_2_thread_ids are present in updated threads.
         """
     ):
-        test.case(private_data.priority_2_thread_ids, "all in", updated_thread_ids)
+        test.case(private_data.priority_2_thread_ids, "all in", updated_thread_ids, labels=("expected", "actual"))
     with test(
         """
         assert all IDs in private_data.priority_3_thread_ids are present in updated threads.
         """
     ):
-        test.case(private_data.priority_3_thread_ids, "all in", updated_thread_ids)
+        test.case(private_data.priority_3_thread_ids, "all in", updated_thread_ids, labels=("expected", "actual"))
     with test(
         """
         assert all updated threads' IDs match the union of

@@ -88,4 +88,4 @@ def evaluate(
         assert the added email's body contains private_data.expected_body_substring.
         """
     ):
-        test.case(private_data.expected_body_substring, "in", added_email.body)
+        test.case(private_data.expected_body_substring, "in", added_email.body, labels=("expected", "actual"))
