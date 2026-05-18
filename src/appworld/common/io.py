@@ -24,6 +24,8 @@ class _MsgspecCompat:
 
 
 orjson = _MsgspecCompat
+import sys
+sys.modules["orjson"] = orjson
 import yaml
 from munch import unmunchify
 from pendulum import Date as _Date
