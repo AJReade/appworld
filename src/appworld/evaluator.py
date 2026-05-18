@@ -163,7 +163,7 @@ class TestTracker:
             })
             raise
 
-    def case(self, *args: Any, labels: tuple[str, str] = ("expected", "actual"), **kwargs: Any) -> None:
+    def case(self, *args: Any, labels: tuple[str, str] = ("actual", "expected"), **kwargs: Any) -> None:
         self._num_case_calls += 1
         left = args[0] if len(args) > 0 else None
         condition = args[1] if len(args) > 1 else "is_truthy"
@@ -186,7 +186,7 @@ class TestTracker:
             })
             raise
 
-    def subcases(self, subcases_args: list[tuple[Any, ...]], labels: tuple[str, str] = ("expected", "actual")) -> None:
+    def subcases(self, subcases_args: list[tuple[Any, ...]], labels: tuple[str, str] = ("actual", "expected")) -> None:
         self._num_case_calls += 1
         left_label, right_label = labels
         for subcase_args in subcases_args:
