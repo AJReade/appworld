@@ -81,6 +81,21 @@ def build_fail_trace(exception: Exception) -> str:
     return fail_message
 
 
+def _serialize(value):
+    """Convert Python values to JSON-safe types for comparison capture."""
+    if value is None:
+        return None
+    if isinstance(value, (int, float, str, bool)):
+        return value
+    if isinstance(value, (list, tuple)):
+        return [_serialize(v) for v in value]
+    if isinstance(value, set):
+        return sorted([_serialize(v) for v in value], key=str)
+    if isinstance(value, dict):
+        return {str(k): _serialize(v) for k, v in value.items()}
+    return str(value)
+
+
 class TestTracker:
     @validate_call
     def __init__(
@@ -108,6 +123,7 @@ class TestTracker:
         self.requirement: str | None = None
         self.passes: list[Pass] = []
         self.failures: list[Failure] = []
+        self._current_comparisons: list[dict] = []
 
     @classmethod
     def prepare_test_data(
@@ -128,11 +144,46 @@ class TestTracker:
 
     def answer(self, predicted_answer: AnswerType, ground_truth_answer: AnswerType) -> None:
         self._num_case_calls += 1
-        assert_plus(answer_to_text(predicted_answer), "==", answer_to_text(ground_truth_answer))
+        actual = answer_to_text(predicted_answer)
+        expected = answer_to_text(ground_truth_answer)
+        try:
+            assert_plus(actual, "==", expected)
+            self._current_comparisons.append({
+                "actual": _serialize(actual),
+                "operator": "==",
+                "expected": _serialize(expected),
+                "passed": True,
+            })
+        except Exception:
+            self._current_comparisons.append({
+                "actual": _serialize(actual),
+                "operator": "==",
+                "expected": _serialize(expected),
+                "passed": False,
+            })
+            raise
 
     def case(self, *args: Any, **kwargs: Any) -> None:
         self._num_case_calls += 1
-        assert_plus(*args, **kwargs)
+        left = args[0] if len(args) > 0 else None
+        condition = args[1] if len(args) > 1 else "is_truthy"
+        right = args[2] if len(args) > 2 else None
+        try:
+            assert_plus(*args, **kwargs)
+            self._current_comparisons.append({
+                "actual": _serialize(left),
+                "operator": condition,
+                "expected": _serialize(right),
+                "passed": True,
+            })
+        except Exception:
+            self._current_comparisons.append({
+                "actual": _serialize(left),
+                "operator": condition,
+                "expected": _serialize(right),
+                "passed": False,
+            })
+            raise
 
     def subcases(self, subcases_args: list[tuple[Any, ...]]) -> None:
         self._num_case_calls += 1
@@ -146,7 +197,26 @@ class TestTracker:
                     f"If the 4th argument to subcases is provided, it must be a dict, which will "
                     f"be passed as kwargs to assert_plus. But got {type(subcase_args[3])}."
                 )
-            assert_plus(*subcase_args)
+            left = subcase_args[0]
+            condition = subcase_args[1]
+            right = subcase_args[2]
+            kwargs = subcase_args[3] if len(subcase_args) == 4 else {}
+            try:
+                assert_plus(left, condition, right, **kwargs)
+                self._current_comparisons.append({
+                    "actual": _serialize(left),
+                    "operator": condition,
+                    "expected": _serialize(right),
+                    "passed": True,
+                })
+            except Exception:
+                self._current_comparisons.append({
+                    "actual": _serialize(left),
+                    "operator": condition,
+                    "expected": _serialize(right),
+                    "passed": False,
+                })
+                raise
 
     def reset(self) -> None:
         self.passes = []
@@ -366,6 +436,7 @@ class TestTracker:
         return self.__enter__()
 
     def __enter__(self) -> Self:
+        self._current_comparisons = []
         return self
 
     def __exit__(
@@ -383,7 +454,7 @@ class TestTracker:
                 )
             label = self._test_requirement_to_label.get(pass_requirement, None)
             severity = self._test_requirement_to_severity.get(pass_requirement, "minor")
-            self.passes.append({"requirement": pass_requirement, "label": label, "severity": severity})
+            self.passes.append({"requirement": pass_requirement, "label": label, "severity": severity, "comparisons": self._current_comparisons})
         else:
             fail_trace = ""
             if isinstance(exc_value, Exception):
@@ -404,6 +475,7 @@ class TestTracker:
                     "trace": fail_trace,
                     "label": label,
                     "severity": severity,
+                    "comparisons": self._current_comparisons,
                 }
             )
         self.requirement = None
