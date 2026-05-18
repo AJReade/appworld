@@ -14,12 +14,16 @@ import msgspec.json as _msgspec_json
 
 class _MsgspecCompat:
     """Drop-in replacement for orjson using msgspec."""
+    OPT_NON_STR_KEYS = 1
+    OPT_SERIALIZE_NUMPY = 2
+    OPT_SORT_KEYS = 4
+
     @staticmethod
     def loads(data):
         return _msgspec_json.decode(data)
 
     @staticmethod
-    def dumps(data):
+    def dumps(data, **kwargs):
         return _msgspec_json.encode(data)
 
 
