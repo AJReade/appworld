@@ -7,6 +7,7 @@ import os
 import re
 import shutil
 import sys
+import threading
 import uuid
 from collections import defaultdict
 from copy import deepcopy
@@ -513,8 +514,14 @@ def _initializer_stop(initializer: _AppWorldInitializer) -> None:
 
 
 class AppWorld:
-    id_to_time_freezer: ClassVar[dict[str, freeze_time]] = {}
+    _local: ClassVar[threading.local] = threading.local()
     init_defaults: ClassVar[AppWorldInitDefaults] = _init_defaults
+
+    @classmethod
+    def _get_local(cls):
+        if not hasattr(cls._local, "id_to_time_freezer"):
+            cls._local.id_to_time_freezer = {}
+        return cls._local
 
     def __init__(
         self,
@@ -863,13 +870,13 @@ class AppWorld:
         self._maybe_raise_remote_environment_error("_set_datetime")
         self.time_freezer_id = str(uuid.uuid4())
         self.time_freezer: freeze_time = set_local_date_and_time(self.task.datetime)
-        self.id_to_time_freezer[self.time_freezer_id] = self.time_freezer
+        self._get_local().id_to_time_freezer[self.time_freezer_id] = self.time_freezer
 
     def _unset_datetime(self) -> None:
         from appworld.apps.lib.apis.local_remote import unset_local_date_and_time
 
         self._maybe_raise_remote_environment_error("_unset_datetime")
-        self.id_to_time_freezer.pop(self.time_freezer_id, None)
+        self._get_local().id_to_time_freezer.pop(self.time_freezer_id, None)
         unset_local_date_and_time(self.time_freezer)
 
     def _execute_preamble(self) -> None:
@@ -1454,9 +1461,9 @@ class AppWorld:
                 _timeout_seconds=_init_defaults.timeout_seconds,
                 method_name="close_all",
             )
-        for time_freezer in cls.id_to_time_freezer.values():
+        for time_freezer in cls._get_local().id_to_time_freezer.values():
             time_freezer.stop()
-        cls.id_to_time_freezer.clear()
+        cls._get_local().id_to_time_freezer.clear()
         if remote_apis_url:
             clear_remote_dbs_cache(remote_apis_url)
         else:
@@ -1465,8 +1472,11 @@ class AppWorld:
         GCThreshold.reset()
 
 
-@cache
-def _appworld_test_client() -> TestClient:
-    from appworld.serve.environment import app
+_test_client_local = threading.local()
 
-    return TestClient(app)
+
+def _appworld_test_client() -> TestClient:
+    if not hasattr(_test_client_local, "client"):
+        from appworld.serve.environment import app
+        _test_client_local.client = TestClient(app)
+    return _test_client_local.client

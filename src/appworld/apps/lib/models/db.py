@@ -33,6 +33,15 @@ from appworld.common.text import natural_join
 if TYPE_CHECKING:
     from appworld.apps.lib.models.orm import SQLModel
 
+
+class classproperty:
+    """Descriptor that works like @property but on the class itself."""
+    def __init__(self, method):
+        self.method = method
+    def __get__(self, obj, objtype=None):
+        return self.method(objtype or type(obj))
+
+
 CHANGE_TYPE_LITERAL = Literal["create", "update", "delete"]
 
 Change = tuple[str, list[Any] | dict[str, Any], bool]
@@ -85,30 +94,69 @@ class DBChangesTracker:
 
 
 class Database:
-    # This has to be in a separate class so that changing DB at one place for an app
-    # changes db for all classes within that app.
-    engine: SQLEngine | None = None
-    tracker: DBChangesTracker
-    url: str
-    path: str
-    home_path: str
-    storage_type: str
-    connection: SQLite3Connection
+    _local = threading.local()
+
+    @classmethod
+    def _get_local(cls):
+        key = cls.__name__
+        if not hasattr(cls._local, key):
+            setattr(cls._local, key, {
+                "engine": None,
+                "tracker": None,
+                "url": None,
+                "path": None,
+                "home_path": None,
+                "storage_type": None,
+                "connection": None,
+            })
+        return getattr(cls._local, key)
+
+    @classproperty
+    def engine(cls):
+        return cls._get_local()["engine"]
+
+    @classproperty
+    def tracker(cls):
+        return cls._get_local()["tracker"]
+
+    @classproperty
+    def url(cls):
+        return cls._get_local()["url"]
+
+    @classproperty
+    def path(cls):
+        return cls._get_local()["path"]
+
+    @classproperty
+    def home_path(cls):
+        return cls._get_local()["home_path"]
+
+    @classproperty
+    def storage_type(cls):
+        return cls._get_local()["storage_type"]
+
+    @classproperty
+    def connection(cls):
+        return cls._get_local()["connection"]
 
     @classmethod
     def set(cls, engine: SQLEngine, tracker: DBChangesTracker) -> None:
-        if engine == cls.engine:
+        state = cls._get_local()
+        if engine == state["engine"]:
             return None
-        cls.engine = engine
-        cls.tracker = tracker
-        cls.url, cls.path, cls.home_path, cls.storage_type, cls.connection = (
+        state["engine"] = engine
+        state["tracker"] = tracker
+        state["url"], state["path"], state["home_path"], state["storage_type"], state["connection"] = (
             cls._get_engine_to_details(engine)
         )
 
     @classmethod
     def connection_is_open(cls) -> bool:
         try:
-            cursor = cls.connection.execute(
+            connection = cls._get_local()["connection"]
+            if connection is None:
+                return False
+            cursor = connection.execute(
                 "SELECT COUNT(*) FROM sqlite_master WHERE type='table';"
             )
             count = cursor.fetchone()
@@ -116,15 +164,13 @@ class Database:
         except sqlite3.ProgrammingError:
             return False
 
-    @staticmethod  # NOTE: Do NOT do @cache here, it'll cause memory leak otherwise.
+    @staticmethod
     def _get_engine_to_details(engine: SQLEngine) -> tuple[str, str, str, str, SQLite3Connection]:
         url = engine.url.render_as_string()
         path = url.removeprefix("sqlite:///")
         if url == "sqlite://":
             raise Exception("home_path cannot be set for unnamed in-memory database.")
         elif "mode=memory" in url:
-            # https://www.sqlite.org/inmemorydb.html
-            # https://stackoverflow.com/questions/58649529/how-to-create-multiple-memory-databases-in-sqlite3
             inmemory_name = (
                 url.removeprefix("sqlite://").lstrip("/").removeprefix("file:").split("?")[0]
             )
@@ -136,49 +182,54 @@ class Database:
             database_str = engine.url.database
             assert database_str is not None, f"The URL {engine.url} does not have a database."
             home_path = os.path.dirname(database_str.removeprefix("sqlite:///"))
-        storage_type = (
-            "memory" if "memory" in url else "disk"
-        )  # it should be memory and not :memory:.
+        storage_type = "memory" if "memory" in url else "disk"
         raw = engine.raw_connection()
         connection = cast(SQLite3Connection, cast(Any, raw).connection)
         return url, path, home_path, storage_type, connection
 
     @classmethod
     def destroy(cls) -> None:
-        assert cls.engine is not None, "Database engine is not set, so cannot destroy."
-        cls.tracker.reset()
-        cls.engine.dispose()
-        cls.connection.close()
+        state = cls._get_local()
+        assert state["engine"] is not None, "Database engine is not set, so cannot destroy."
+        state["tracker"].reset()
+        state["engine"].dispose()
+        state["connection"].close()
 
     @classmethod
     def save(cls, save_type: Literal["full", "changes"], path: str) -> None:
+        state = cls._get_local()
         if save_type == "full":
-            source_storage_type = cls.storage_type
+            source_storage_type = state["storage_type"]
             target_storage_type = "memory" if "memory" in path else "disk"
             if "memory" in [source_storage_type, target_storage_type]:
-                source_connection = cls.connection
+                source_connection = state["connection"]
                 target_connection = sqlite3.connect(path, check_same_thread=False)
                 source_connection.backup(target_connection)
-            elif cls.path != path:
+            elif state["path"] != path:
                 maybe_create_parent_directory(path)
-                shutil.copy(cls.path, path)
+                shutil.copy(state["path"], path)
         elif save_type == "changes":
-            cls.tracker.save(path)
-        else:
-            raise ValueError(f"save_type must be full or changes. Found: {save_type}")
+            state["tracker"].save(path)
 
 
 class ModelHashHandler:
-    data: ClassVar[dict[str, dict[str, dict[str, int]]]] = defaultdict(lambda: defaultdict(Counter))
+    _local = threading.local()
+
+    @classmethod
+    def _get_data(cls):
+        if not hasattr(cls._local, "data"):
+            cls._local.data = defaultdict(lambda: defaultdict(Counter))
+        return cls._local.data
 
     @classmethod
     def reset(cls, db_home_path: str | None = None, app_name: str | None = None) -> None:
+        data = cls._get_data()
         if db_home_path is not None and app_name is not None:
-            cls.data[db_home_path][app_name] = Counter()
+            data[db_home_path][app_name] = Counter()
         elif db_home_path is not None:
-            cls.data[db_home_path] = defaultdict(Counter)
+            data[db_home_path] = defaultdict(Counter)
         else:
-            cls.data = defaultdict(lambda: defaultdict(Counter))
+            cls._local.data = defaultdict(lambda: defaultdict(Counter))
 
     @classmethod
     def load(cls, from_db_home_path: str | None = None, to_db_home_path: str | None = None) -> None:
@@ -192,9 +243,10 @@ class ModelHashHandler:
         cls.reset(to_db_home_path)
         if not os.path.exists(model_hashes_file_path):
             return
+        data = cls._get_data()
         for app_name, model_name_to_hash in read_json(model_hashes_file_path).items():
             for model_name, hash_ in model_name_to_hash.items():
-                cls.data[to_db_home_path][app_name][model_name] = hash_
+                data[to_db_home_path][app_name][model_name] = hash_
 
     @classmethod
     def save(cls, from_db_home_path: str | None = None, to_db_home_path: str | None = None) -> None:
@@ -205,49 +257,51 @@ class ModelHashHandler:
         assert from_db_home_path is not None  # mypy
         assert to_db_home_path is not None  # mypy
         model_hashes_file_path = os.path.join(to_db_home_path, "model_hashes.json")
-        model_hashes = cls.data[from_db_home_path]
+        data = cls._get_data()
+        model_hashes = data[from_db_home_path]
         write_json(model_hashes, model_hashes_file_path, silent=True)
 
 
 class CachedDBHandler:
-    cache: ClassVar[dict[str, tuple[SQLEngine, DBChangesTracker]]] = {}
-    _lock: ClassVar[threading.Lock] = threading.Lock()
+    _local = threading.local()
+
+    @classmethod
+    def _get_cache(cls):
+        if not hasattr(cls._local, "cache"):
+            cls._local.cache = {}
+        return cls._local.cache
 
     @classmethod
     def has(cls, db_app_path: str) -> bool:
-        with cls._lock:
-            return db_app_path in cls.cache
+        return db_app_path in cls._get_cache()
 
     @classmethod
     def is_empty(cls) -> bool:
-        with cls._lock:
-            return not bool(cls.cache)
+        return not bool(cls._get_cache())
 
     @classmethod
     def get(cls, db_app_path: str) -> tuple[SQLEngine, DBChangesTracker] | None:
-        with cls._lock:
-            return cls.cache.get(db_app_path, None)
+        return cls._get_cache().get(db_app_path, None)
 
     @classmethod
     def set(cls, db_app_path: str, engine: SQLEngine, tracker: DBChangesTracker) -> None:
-        with cls._lock:
-            cls.cache[db_app_path] = (engine, tracker)
+        cls._get_cache()[db_app_path] = (engine, tracker)
 
     @classmethod
     def reset(cls, key_substring: str | None = None) -> None:
-        with cls._lock:
-            to_remove_db_app_paths: set[str] = set()
-            for db_app_path, (engine, tracker) in cls.cache.items():
-                if key_substring is None or key_substring in db_app_path:
-                    tracker.reset()
-                    engine.dispose()
-                    engine.raw_connection().connection.close()  # type: ignore[unused-ignore,attr-defined]
-                    to_remove_db_app_paths.add(db_app_path)
-            if key_substring is not None:
-                for to_remove_db_app_path in to_remove_db_app_paths:
-                    cls.cache.pop(to_remove_db_app_path)
-            else:
-                cls.cache = {}
+        cache = cls._get_cache()
+        to_remove: set[str] = set()
+        for db_app_path, (engine, tracker) in cache.items():
+            if key_substring is None or key_substring in db_app_path:
+                tracker.reset()
+                engine.dispose()
+                engine.raw_connection().connection.close()
+                to_remove.add(db_app_path)
+        if key_substring is not None:
+            for path in to_remove:
+                cache.pop(path)
+        else:
+            cls._local.cache = {}
 
 
 def set_sqlite_pragma(dbapi_connection: SQLite3Connection, connection_record: Connection) -> None:
@@ -268,9 +322,15 @@ def set_sqlite_pragma(dbapi_connection: SQLite3Connection, connection_record: Co
     # or add decorator to this function: @event.listens_for(Engine, "connect")
 
 
-@lru_cache(maxsize=1000)
+_db_engine_local = threading.local()
+
 def get_cached_db_engine(db_app_path: str) -> SQLEngine:
-    return get_db_engine(db_app_path)
+    if not hasattr(_db_engine_local, "cache"):
+        _db_engine_local.cache = {}
+    cache = _db_engine_local.cache
+    if db_app_path not in cache:
+        cache[db_app_path] = get_db_engine(db_app_path)
+    return cache[db_app_path]
 
 
 def get_db_engine(db_app_path: str) -> SQLEngine:
@@ -300,9 +360,15 @@ def get_db_engine(db_app_path: str) -> SQLEngine:
     return engine
 
 
-@lru_cache(maxsize=1000)
+_sqlite3_conn_local = threading.local()
+
 def get_direct_cached_sqlite3_connection(db_app_path: str) -> SQLite3Connection:
-    return get_direct_sqlite3_connection(db_app_path)
+    if not hasattr(_sqlite3_conn_local, "cache"):
+        _sqlite3_conn_local.cache = {}
+    cache = _sqlite3_conn_local.cache
+    if db_app_path not in cache:
+        cache[db_app_path] = get_direct_sqlite3_connection(db_app_path)
+    return cache[db_app_path]
 
 
 def get_direct_sqlite3_connection(db_app_path: str) -> SQLite3Connection:
