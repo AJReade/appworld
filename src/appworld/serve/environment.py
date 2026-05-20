@@ -9,7 +9,11 @@ from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from munch import unmunchify
 
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request as StarletteRequest
+
 from appworld import FASTAPI_METADATA, update_root
+from appworld.apps.lib.models.db import set_bridge_id
 from appworld.collections.api_docs import ApiDocCollection  # type: ignore[attr-defined]
 from appworld.common.constants import DEFAULT_REMOTE_ENVIRONMENT_PORT
 from appworld.common.io import dump_yaml, read_file
@@ -30,6 +34,15 @@ app = FastAPI(
     ),
     **FASTAPI_METADATA,
 )
+class BridgeIDMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: StarletteRequest, call_next):
+        bridge_id = request.headers.get("x-bridge-id")
+        if bridge_id:
+            set_bridge_id(bridge_id)
+        return await call_next(request)
+
+
+app.add_middleware(BridgeIDMiddleware)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],

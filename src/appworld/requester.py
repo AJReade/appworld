@@ -500,9 +500,12 @@ class Requester:
         client = client or self.client
         data = data or {}
         headers: dict[str, str] = {}
+        bridge_id = get_bridge_id()
+        if bridge_id != "default":
+            headers["X-Bridge-ID"] = bridge_id
         if data and "access_token" in data:
             access_token = data.pop("access_token", None)
-            headers = {"Authorization": f"Bearer {access_token}"}
+            headers["Authorization"] = f"Bearer {access_token}"
         if url.startswith("/"):
             if client is None:
                 if self.remote_apis_url is None:
