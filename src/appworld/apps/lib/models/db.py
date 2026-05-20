@@ -42,15 +42,17 @@ class classproperty:
         return self.method(objtype or type(obj))
 
 
-_bridge_context = threading.local()
+import contextvars
+
+_bridge_id_var: contextvars.ContextVar[str] = contextvars.ContextVar("bridge_id", default="default")
 
 
 def set_bridge_id(bridge_id: str) -> None:
-    _bridge_context.bridge_id = bridge_id
+    _bridge_id_var.set(bridge_id)
 
 
 def get_bridge_id() -> str:
-    return getattr(_bridge_context, "bridge_id", "default")
+    return _bridge_id_var.get()
 
 
 CHANGE_TYPE_LITERAL = Literal["create", "update", "delete"]
