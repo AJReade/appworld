@@ -12,6 +12,7 @@ from typing import Any, Literal, get_args
 
 from fastapi import Body, FastAPI, Path, Request
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.base import BaseHTTPMiddleware
 from fastapi.responses import FileResponse, ORJSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
@@ -144,6 +145,16 @@ def build_main_app(app_names: list[str] | None = None) -> FastAPI:
         lifespan=lifespan,
         **FASTAPI_METADATA,
     )
+    from appworld.apps.lib.models.db import set_bridge_id
+
+    class BridgeIDMiddleware(BaseHTTPMiddleware):
+        async def dispatch(self, request, call_next):
+            bridge_id = request.headers.get("x-bridge-id")
+            if bridge_id:
+                set_bridge_id(bridge_id)
+            return await call_next(request)
+
+    main_app.add_middleware(BridgeIDMiddleware)
     main_app.add_middleware(
         CORSMiddleware,
         allow_origins=["*"],
