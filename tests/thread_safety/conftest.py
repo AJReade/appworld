@@ -2,7 +2,7 @@ import threading
 
 from sqlmodel import create_engine
 
-from appworld.apps.lib.models.db import DBChangesTracker
+from appworld.apps.lib.models.db import DBChangesTracker, set_bridge_id, get_bridge_id, cleanup_bridge
 
 
 def create_mock_engine(name: str):

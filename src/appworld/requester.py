@@ -43,6 +43,7 @@ from appworld.common.path_store import path_store
 from appworld.common.plotting import plot_histogram
 from appworld.common.time import Timer, freeze_time
 from appworld.common.types import ListOrDict, cast_dict
+from appworld.apps.lib.models.db import get_bridge_id
 
 
 if typing.TYPE_CHECKING:
@@ -119,33 +120,38 @@ class RequestTracker:
 
 
 class RequestTimeTracker:
-    _local: ClassVar[threading.local] = threading.local()
+    _state: ClassVar[dict[str, dict]] = {}
+    _lock: ClassVar[threading.Lock] = threading.Lock()
 
     @classmethod
     def _get_local(cls):
-        if not hasattr(cls._local, "on"):
-            cls._local.on = False
-            cls._local._individual = defaultdict(list)
-            cls._local._total = defaultdict(float)
-            cls._local._average = defaultdict(float)
-        return cls._local
+        bid = get_bridge_id()
+        with cls._lock:
+            if bid not in cls._state:
+                cls._state[bid] = {
+                    "on": False,
+                    "_individual": defaultdict(list),
+                    "_total": defaultdict(float),
+                    "_average": defaultdict(float),
+                }
+            return cls._state[bid]
 
     @classmethod
     def enable(cls) -> None:
-        cls._get_local().on = True
+        cls._get_local()["on"] = True
 
     @classmethod
     def disable(cls) -> None:
-        cls._get_local().on = False
+        cls._get_local()["on"] = False
 
     @classmethod
     def compute(cls) -> None:
-        cls._get_local()._total = {k: sum(v) for k, v in cls._get_local()._individual.items()}
-        cls._get_local()._average = {k: safe_divide(sum(v), len(v)) for k, v in cls._get_local()._individual.items()}
+        cls._get_local()["_total"] = {k: sum(v) for k, v in cls._get_local()["_individual"].items()}
+        cls._get_local()["_average"] = {k: safe_divide(sum(v), len(v)) for k, v in cls._get_local()["_individual"].items()}
 
     @classmethod
     def register(cls, app_name: str, api_name: str, time_taken: float) -> None:
-        cls._get_local()._individual[app_name + "." + api_name].append(time_taken)
+        cls._get_local()["_individual"][app_name + "." + api_name].append(time_taken)
 
     @classmethod
     def show_aggregate(
@@ -156,17 +162,17 @@ class RequestTimeTracker:
     ) -> None:
         if compute:
             cls.compute()
-        api_keys = list(cls._get_local()._individual.keys())
+        api_keys = list(cls._get_local()["_individual"].keys())
         if app_name is not None:
             api_keys = [api_key for api_key in api_keys if api_key.startswith(app_name)]
 
         def sorting_function(api_key: str) -> float:
             if sorted_by == "total":
-                return cls._get_local()._total[api_key]
+                return cls._get_local()["_total"][api_key]
             if sorted_by == "average":
-                return cls._get_local()._average[api_key]
+                return cls._get_local()["_average"][api_key]
             if sorted_by == "num_calls":
-                return len(cls._get_local()._individual[api_key])
+                return len(cls._get_local()["_individual"][api_key])
             raise ValueError(f"Invalid sorted_by value: {sorted_by}")
 
         api_keys = sorted(api_keys, key=lambda api_key: sorting_function(api_key), reverse=True)
@@ -178,9 +184,9 @@ class RequestTimeTracker:
             output = " ".join(
                 [
                     f"{api_key:<40}"
-                    f"{cls._get_local()._average[api_key]:<10.4f}"
-                    f"{len(cls._get_local()._individual[api_key]):<10}"
-                    f"{cls._get_local()._total[api_key]:<10.4f}"
+                    f"{cls._get_local()['_average'][api_key]:<10.4f}"
+                    f"{len(cls._get_local()['_individual'][api_key]):<10}"
+                    f"{cls._get_local()['_total'][api_key]:<10.4f}"
                 ]
             )
             print(output)
@@ -189,7 +195,7 @@ class RequestTimeTracker:
     def show_individual(
         cls, app_name: str, api_name: str, show_histogram: bool = False
     ) -> list[float]:
-        results = cls._get_local()._individual[app_name + "." + api_name]
+        results = cls._get_local()["_individual"][app_name + "." + api_name]
         if show_histogram:
             # TODO: support line plot as well to see how time taken changes over time.
             plot_histogram(
@@ -201,15 +207,15 @@ class RequestTimeTracker:
 
     @classmethod
     def reset(cls) -> None:
-        cls._get_local()._individual = defaultdict(list)
-        cls._get_local()._total = defaultdict(float)
-        cls._get_local()._average = defaultdict(float)
+        cls._get_local()["_individual"] = defaultdict(list)
+        cls._get_local()["_total"] = defaultdict(float)
+        cls._get_local()["_average"] = defaultdict(float)
 
     @classmethod
     def save(cls, name: str) -> None:
         os.makedirs(path_store.profiling, exist_ok=True)
         file_path = os.path.join(path_store.profiling, name + ".json")
-        write_json(cls._get_local()._individual, file_path)
+        write_json(cls._get_local()["_individual"], file_path)
 
     @classmethod
     def load(cls, name_prefix: str, compute: bool = False) -> None:
@@ -226,7 +232,7 @@ class RequestTimeTracker:
         for file_path in file_paths:
             data = read_json(file_path)
             for k, v in data.items():
-                cls._get_local()._individual[k].extend(v)
+                cls._get_local()["_individual"][k].extend(v)
         if compute:
             cls.compute()
 
@@ -259,16 +265,21 @@ ResponseType = Response | HTTPXResponse | CustomResponse
 
 
 class Requester:
-    _local: ClassVar[threading.local] = threading.local()
+    _state: ClassVar[dict[str, dict]] = {}
+    _lock: ClassVar[threading.Lock] = threading.Lock()
 
     @classmethod
     def _get_local(cls):
-        if not hasattr(cls._local, "clients"):
-            cls._local.clients = {}
-            cls._local.mcps = []
-            cls._local.time_freezers_or_ids = []
-            cls._local.time_freezer_id_to_remote_apis_url = {}
-        return cls._local
+        bid = get_bridge_id()
+        with cls._lock:
+            if bid not in cls._state:
+                cls._state[bid] = {
+                    "clients": {},
+                    "mcps": [],
+                    "time_freezers_or_ids": [],
+                    "time_freezer_id_to_remote_apis_url": {},
+                }
+            return cls._state[bid]
 
     def __init__(
         self,
@@ -342,7 +353,7 @@ class Requester:
             self.mcp = MCPClient.from_dict(mcp_config)
             assert self.mcp is not None  # mypy
             self.mcp.connect()
-            self.__class__._get_local().mcps.append(self.mcp)
+            self.__class__._get_local()["mcps"].append(self.mcp)
 
         if load_apps is None:
             load_apps = get_all_apps()
@@ -406,11 +417,11 @@ class Requester:
                     self.remote_apis_url, self.date_and_time
                 )
                 set_remote_random_seed(self.remote_apis_url, self.random_seed)
-                self._get_local().time_freezer_id_to_remote_apis_url[self.time_freezer_or_id] = (
+                self._get_local()["time_freezer_id_to_remote_apis_url"][self.time_freezer_or_id] = (
                     self.remote_apis_url
                 )
             assert self.time_freezer_or_id is not None  # mypy
-            self._get_local().time_freezers_or_ids.append(cast(freeze_time | str, self.time_freezer_or_id))
+            self._get_local()["time_freezers_or_ids"].append(cast(freeze_time | str, self.time_freezer_or_id))
         if not self.remote_apis_url:
             set_local_show_api_response_schemas(self.show_api_response_schemas)
         else:
@@ -420,17 +431,17 @@ class Requester:
 
     def _get_client(self) -> TestClient:
         klass = self.__class__
-        if self.apps not in klass._get_local().clients:
+        if self.apps not in klass._get_local()["clients"]:
             # The .__enter__() is necessary to avoid the memory leakage.
             # TODO: post a github issue on fastapi/starlette with repro.
             client = TestClient(build_main_app(list(self.apps))).__enter__()
-            klass._get_local().clients[self.apps] = client
-        return klass._get_local().clients[self.apps]
+            klass._get_local()["clients"][self.apps] = client
+        return klass._get_local()["clients"][self.apps]
 
     def close(self) -> None:
         if self.client:
             self.client.__exit__(None, None, None)
-            self._get_local().clients.pop(self.apps, None)
+            self._get_local()["clients"].pop(self.apps, None)
         self.request_tracker.reset()
         if self.mcp:
             self.mcp.disconnect()
@@ -444,28 +455,28 @@ class Requester:
             assert isinstance(self.remote_apis_url, str)  # mypy
             assert isinstance(time_freezer_or_id, str)  # mypy
             unset_remote_date_and_time(self.remote_apis_url, time_freezer_or_id)
-            self._get_local().time_freezer_id_to_remote_apis_url.pop(time_freezer_or_id, None)
-        if self.date_and_time and self.time_freezer_or_id in self._get_local().time_freezers_or_ids:
-            self._get_local().time_freezers_or_ids.remove(self.time_freezer_or_id)
+            self._get_local()["time_freezer_id_to_remote_apis_url"].pop(time_freezer_or_id, None)
+        if self.date_and_time and self.time_freezer_or_id in self._get_local()["time_freezers_or_ids"]:
+            self._get_local()["time_freezers_or_ids"].remove(self.time_freezer_or_id)
 
     @classmethod
     def close_all(cls) -> None:
-        for client in cls._get_local().clients.values():
+        for client in cls._get_local()["clients"].values():
             client.__exit__(None, None, None)
-        cls._get_local().clients = {}
-        for mcp in cls._get_local().mcps:
+        cls._get_local()["clients"] = {}
+        for mcp in cls._get_local()["mcps"]:
             mcp.disconnect()
-        for time_freezer_or_id in cls._get_local().time_freezers_or_ids:
+        for time_freezer_or_id in cls._get_local()["time_freezers_or_ids"]:
             if not isinstance(time_freezer_or_id, str):
                 unset_local_date_and_time(time_freezer_or_id)
             else:
-                remote_apis_url = cls._get_local().time_freezer_id_to_remote_apis_url.pop(
+                remote_apis_url = cls._get_local()["time_freezer_id_to_remote_apis_url"].pop(
                     time_freezer_or_id, None
                 )
                 if remote_apis_url is not None:
                     unset_remote_date_and_time(remote_apis_url, time_freezer_or_id)
-        cls._get_local().time_freezers_or_ids = []
-        cls._get_local().time_freezer_id_to_remote_apis_url = {}
+        cls._get_local()["time_freezers_or_ids"] = []
+        cls._get_local()["time_freezer_id_to_remote_apis_url"] = {}
 
     @property
     def requests(self) -> list[RequestCallInfoType]:
@@ -850,12 +861,12 @@ class Requester:
                 path = path.replace("{" + field_name + "}", str(data[field_name]))
                 data.pop(field_name)
 
-        if RequestTimeTracker._get_local().on:
+        if RequestTimeTracker._get_local()["on"]:
             timer = Timer(start=True, bypass_freezegun=True)
         result = function(
             path, data=data, client=client, track=track, raise_on_failure=raise_on_failure
         )
-        if RequestTimeTracker._get_local().on:
+        if RequestTimeTracker._get_local()["on"]:
             RequestTimeTracker.register(_app_name, _api_name, timer.stop())
         return result
 

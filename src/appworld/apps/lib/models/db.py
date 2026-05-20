@@ -42,6 +42,17 @@ class classproperty:
         return self.method(objtype or type(obj))
 
 
+_bridge_context = threading.local()
+
+
+def set_bridge_id(bridge_id: str) -> None:
+    _bridge_context.bridge_id = bridge_id
+
+
+def get_bridge_id() -> str:
+    return getattr(_bridge_context, "bridge_id", "default")
+
+
 CHANGE_TYPE_LITERAL = Literal["create", "update", "delete"]
 
 Change = tuple[str, list[Any] | dict[str, Any], bool]
@@ -94,54 +105,61 @@ class DBChangesTracker:
 
 
 class Database:
-    _local = threading.local()
+    _state: dict[tuple[str, str], dict] = {}
+    _lock = threading.Lock()
 
     @classmethod
-    def _get_local(cls):
-        key = cls.__name__
-        if not hasattr(cls._local, key):
-            setattr(cls._local, key, {
-                "engine": None,
-                "tracker": None,
-                "url": None,
-                "path": None,
-                "home_path": None,
-                "storage_type": None,
-                "connection": None,
-            })
-        return getattr(cls._local, key)
+    def _class_key(cls) -> str:
+        return f"{cls.__module__}.{cls.__qualname__}"
+
+    @classmethod
+    def _get_state(cls):
+        bid = get_bridge_id()
+        key = (bid, cls._class_key())
+        with cls._lock:
+            if key not in cls._state:
+                cls._state[key] = {
+                    "engine": None,
+                    "tracker": None,
+                    "url": None,
+                    "path": None,
+                    "home_path": None,
+                    "storage_type": None,
+                    "connection": None,
+                }
+            return cls._state[key]
 
     @classproperty
     def engine(cls):
-        return cls._get_local()["engine"]
+        return cls._get_state()["engine"]
 
     @classproperty
     def tracker(cls):
-        return cls._get_local()["tracker"]
+        return cls._get_state()["tracker"]
 
     @classproperty
     def url(cls):
-        return cls._get_local()["url"]
+        return cls._get_state()["url"]
 
     @classproperty
     def path(cls):
-        return cls._get_local()["path"]
+        return cls._get_state()["path"]
 
     @classproperty
     def home_path(cls):
-        return cls._get_local()["home_path"]
+        return cls._get_state()["home_path"]
 
     @classproperty
     def storage_type(cls):
-        return cls._get_local()["storage_type"]
+        return cls._get_state()["storage_type"]
 
     @classproperty
     def connection(cls):
-        return cls._get_local()["connection"]
+        return cls._get_state()["connection"]
 
     @classmethod
     def set(cls, engine: SQLEngine, tracker: DBChangesTracker) -> None:
-        state = cls._get_local()
+        state = cls._get_state()
         if engine == state["engine"]:
             return None
         state["engine"] = engine
@@ -153,7 +171,7 @@ class Database:
     @classmethod
     def connection_is_open(cls) -> bool:
         try:
-            connection = cls._get_local()["connection"]
+            connection = cls._get_state()["connection"]
             if connection is None:
                 return False
             cursor = connection.execute(
@@ -189,7 +207,7 @@ class Database:
 
     @classmethod
     def destroy(cls) -> None:
-        state = cls._get_local()
+        state = cls._get_state()
         assert state["engine"] is not None, "Database engine is not set, so cannot destroy."
         state["tracker"].reset()
         state["engine"].dispose()
@@ -197,7 +215,7 @@ class Database:
 
     @classmethod
     def save(cls, save_type: Literal["full", "changes"], path: str) -> None:
-        state = cls._get_local()
+        state = cls._get_state()
         if save_type == "full":
             source_storage_type = state["storage_type"]
             target_storage_type = "memory" if "memory" in path else "disk"
@@ -213,13 +231,16 @@ class Database:
 
 
 class ModelHashHandler:
-    _local = threading.local()
+    _state: dict[str, dict] = {}
+    _lock = threading.Lock()
 
     @classmethod
     def _get_data(cls):
-        if not hasattr(cls._local, "data"):
-            cls._local.data = defaultdict(lambda: defaultdict(Counter))
-        return cls._local.data
+        bid = get_bridge_id()
+        with cls._lock:
+            if bid not in cls._state:
+                cls._state[bid] = defaultdict(lambda: defaultdict(Counter))
+            return cls._state[bid]
 
     @classmethod
     def reset(cls, db_home_path: str | None = None, app_name: str | None = None) -> None:
@@ -229,7 +250,9 @@ class ModelHashHandler:
         elif db_home_path is not None:
             data[db_home_path] = defaultdict(Counter)
         else:
-            cls._local.data = defaultdict(lambda: defaultdict(Counter))
+            bid = get_bridge_id()
+            with cls._lock:
+                cls._state[bid] = defaultdict(lambda: defaultdict(Counter))
 
     @classmethod
     def load(cls, from_db_home_path: str | None = None, to_db_home_path: str | None = None) -> None:
@@ -263,13 +286,16 @@ class ModelHashHandler:
 
 
 class CachedDBHandler:
-    _local = threading.local()
+    _state: dict[str, dict[str, tuple[SQLEngine, DBChangesTracker]]] = {}
+    _lock = threading.Lock()
 
     @classmethod
-    def _get_cache(cls):
-        if not hasattr(cls._local, "cache"):
-            cls._local.cache = {}
-        return cls._local.cache
+    def _get_cache(cls) -> dict[str, tuple[SQLEngine, DBChangesTracker]]:
+        bid = get_bridge_id()
+        with cls._lock:
+            if bid not in cls._state:
+                cls._state[bid] = {}
+            return cls._state[bid]
 
     @classmethod
     def has(cls, db_app_path: str) -> bool:
@@ -301,7 +327,9 @@ class CachedDBHandler:
             for path in to_remove:
                 cache.pop(path)
         else:
-            cls._local.cache = {}
+            bid = get_bridge_id()
+            with cls._lock:
+                cls._state[bid] = {}
 
 
 def set_sqlite_pragma(dbapi_connection: SQLite3Connection, connection_record: Connection) -> None:
@@ -322,12 +350,15 @@ def set_sqlite_pragma(dbapi_connection: SQLite3Connection, connection_record: Co
     # or add decorator to this function: @event.listens_for(Engine, "connect")
 
 
-_db_engine_local = threading.local()
+_db_engine_cache: dict[str, dict[str, SQLEngine]] = {}
+_db_engine_lock = threading.Lock()
 
 def get_cached_db_engine(db_app_path: str) -> SQLEngine:
-    if not hasattr(_db_engine_local, "cache"):
-        _db_engine_local.cache = {}
-    cache = _db_engine_local.cache
+    bid = get_bridge_id()
+    with _db_engine_lock:
+        if bid not in _db_engine_cache:
+            _db_engine_cache[bid] = {}
+        cache = _db_engine_cache[bid]
     if db_app_path not in cache:
         cache[db_app_path] = get_db_engine(db_app_path)
     return cache[db_app_path]
@@ -360,12 +391,15 @@ def get_db_engine(db_app_path: str) -> SQLEngine:
     return engine
 
 
-_sqlite3_conn_local = threading.local()
+_sqlite3_conn_cache: dict[str, dict[str, SQLite3Connection]] = {}
+_sqlite3_conn_lock = threading.Lock()
 
 def get_direct_cached_sqlite3_connection(db_app_path: str) -> SQLite3Connection:
-    if not hasattr(_sqlite3_conn_local, "cache"):
-        _sqlite3_conn_local.cache = {}
-    cache = _sqlite3_conn_local.cache
+    bid = get_bridge_id()
+    with _sqlite3_conn_lock:
+        if bid not in _sqlite3_conn_cache:
+            _sqlite3_conn_cache[bid] = {}
+        cache = _sqlite3_conn_cache[bid]
     if db_app_path not in cache:
         cache[db_app_path] = get_direct_sqlite3_connection(db_app_path)
     return cache[db_app_path]
@@ -607,3 +641,23 @@ def raise_uniqueness_error(exception: IntegrityError, model_class: type[SQLModel
     field_names = [column_info.strip().split(".")[1] for column_info in columns_info.split(",")]
     message = f"{model_class.__name__} with this {natural_join(field_names)} already exists."
     raise HTTPException(status_code=409, detail=message) from exception
+
+
+def cleanup_bridge(bridge_id: str) -> None:
+    """Remove all state for a bridge. Call when bridge shuts down."""
+    with Database._lock:
+        keys_to_remove = [k for k in Database._state if k[0] == bridge_id]
+        for k in keys_to_remove:
+            del Database._state[k]
+
+    with CachedDBHandler._lock:
+        CachedDBHandler._state.pop(bridge_id, None)
+
+    with ModelHashHandler._lock:
+        ModelHashHandler._state.pop(bridge_id, None)
+
+    with _db_engine_lock:
+        _db_engine_cache.pop(bridge_id, None)
+
+    with _sqlite3_conn_lock:
+        _sqlite3_conn_cache.pop(bridge_id, None)

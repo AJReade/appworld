@@ -30,7 +30,7 @@ from appworld.apps.lib.apis.local_remote import (
     clear_remote_dbs_cache,
     set_remote_dbs,
 )
-from appworld.apps.lib.models.db import get_db_home_path
+from appworld.apps.lib.models.db import get_bridge_id, get_db_home_path
 from appworld.collections.apis import ApiCollection  # type: ignore[attr-defined]
 from appworld.collections.models import ModelCollection
 from appworld.common.background_server import BackgroundServer
@@ -514,14 +514,17 @@ def _initializer_stop(initializer: _AppWorldInitializer) -> None:
 
 
 class AppWorld:
-    _local: ClassVar[threading.local] = threading.local()
+    _state: ClassVar[dict[str, dict]] = {}
+    _state_lock: ClassVar[threading.Lock] = threading.Lock()
     init_defaults: ClassVar[AppWorldInitDefaults] = _init_defaults
 
     @classmethod
     def _get_local(cls):
-        if not hasattr(cls._local, "id_to_time_freezer"):
-            cls._local.id_to_time_freezer = {}
-        return cls._local
+        bid = get_bridge_id()
+        with cls._state_lock:
+            if bid not in cls._state:
+                cls._state[bid] = {"id_to_time_freezer": {}}
+            return cls._state[bid]
 
     def __init__(
         self,
@@ -870,13 +873,13 @@ class AppWorld:
         self._maybe_raise_remote_environment_error("_set_datetime")
         self.time_freezer_id = str(uuid.uuid4())
         self.time_freezer: freeze_time = set_local_date_and_time(self.task.datetime)
-        self._get_local().id_to_time_freezer[self.time_freezer_id] = self.time_freezer
+        self._get_local()["id_to_time_freezer"][self.time_freezer_id] = self.time_freezer
 
     def _unset_datetime(self) -> None:
         from appworld.apps.lib.apis.local_remote import unset_local_date_and_time
 
         self._maybe_raise_remote_environment_error("_unset_datetime")
-        self._get_local().id_to_time_freezer.pop(self.time_freezer_id, None)
+        self._get_local()["id_to_time_freezer"].pop(self.time_freezer_id, None)
         unset_local_date_and_time(self.time_freezer)
 
     def _execute_preamble(self) -> None:
@@ -1461,9 +1464,9 @@ class AppWorld:
                 _timeout_seconds=_init_defaults.timeout_seconds,
                 method_name="close_all",
             )
-        for time_freezer in cls._get_local().id_to_time_freezer.values():
+        for time_freezer in cls._get_local()["id_to_time_freezer"].values():
             time_freezer.stop()
-        cls._get_local().id_to_time_freezer.clear()
+        cls._get_local()["id_to_time_freezer"].clear()
         if remote_apis_url:
             clear_remote_dbs_cache(remote_apis_url)
         else:
@@ -1472,11 +1475,27 @@ class AppWorld:
         GCThreshold.reset()
 
 
-_test_client_local = threading.local()
+_test_client_cache: dict[str, TestClient] = {}
+_test_client_lock = threading.Lock()
 
 
 def _appworld_test_client() -> TestClient:
-    if not hasattr(_test_client_local, "client"):
-        from appworld.serve.environment import app
-        _test_client_local.client = TestClient(app)
-    return _test_client_local.client
+    bid = get_bridge_id()
+    with _test_client_lock:
+        if bid not in _test_client_cache:
+            from appworld.serve.environment import app
+            _test_client_cache[bid] = TestClient(app)
+        return _test_client_cache[bid]
+
+
+def cleanup_environment_bridge(bridge_id: str) -> None:
+    """Remove environment state for a bridge."""
+    with AppWorld._state_lock:
+        AppWorld._state.pop(bridge_id, None)
+    with _test_client_lock:
+        client = _test_client_cache.pop(bridge_id, None)
+        if client:
+            try:
+                client.__exit__(None, None, None)
+            except Exception:
+                pass
